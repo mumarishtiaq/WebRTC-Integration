@@ -110,6 +110,7 @@ namespace SimpleWebRTC {
                 if (state == RTCIceConnectionState.Completed) {
                     connectionGameObject.Connect();
 
+                    //connectionGameObject.OnConnected?.Invoke();
                     // will only be invoked on offering side
                     OnWebRTCConnection?.Invoke();
 
@@ -151,7 +152,11 @@ namespace SimpleWebRTC {
 
                     SimpleWebRTCLogger.Log("Receiving video stream.");
                 }
-                if (e.Track is AudioStreamTrack audio) {
+
+                //Audio Receiving Code (ARC)
+                //commented by MUI
+                if (e.Track is AudioStreamTrack audio)
+                {
                     OnAudioStreamEstablished?.Invoke();
 
                     var audioReceiver = audioReceivers[peerId];
@@ -161,6 +166,8 @@ namespace SimpleWebRTC {
 
                     SimpleWebRTCLogger.Log("Receiving audio stream.");
                 }
+
+
             };
 
             // not needed, because negotiation is done manually
@@ -434,14 +441,39 @@ namespace SimpleWebRTC {
             }
         }
 
+        //Audio sending code (ASC)
         public void AddAudioTrack(AudioSource streamingAudioSource) {
-            var audioStreamTrack = new AudioStreamTrack(streamingAudioSource) {
-                //Loopback = true
-            };
-            foreach (var peerConnection in peerConnections) {
-                audioTrackSenders.Add(peerConnection.Key, peerConnection.Value.AddTrack(audioStreamTrack));
+            //var audioStreamTrack = new AudioStreamTrack(streamingAudioSource) {
+            //    Loopback = true  //commented by MUI
+            //};
+            if (Microphone.devices.Length > 0)
+            {
+                string micDevice = Microphone.devices[0];
+                Debug.Log("Using mic: " + micDevice);
+                // Proceed with starting microphone
+
+                streamingAudioSource.loop = true;
+                streamingAudioSource.clip = Microphone.Start(micDevice, true, 1, 44100);
+
+                while (!(Microphone.GetPosition(micDevice) > 0)) { } // wait for mic to start
+                streamingAudioSource.Play();
+
+                var audioStreamTrack = new AudioStreamTrack(streamingAudioSource)
+                {
+                    Loopback = false
+                };
+                foreach (var peerConnection in peerConnections)
+                {
+                    audioTrackSenders.Add(peerConnection.Key, peerConnection.Value.AddTrack(audioStreamTrack));
+                }
+                connectionGameObject.StartCoroutine(CreateOffer());
             }
-            connectionGameObject.StartCoroutine(CreateOffer());
+            else
+            {
+                //TODO
+                //show error on UI
+                Debug.LogError("No microphone Detected");
+            }
         }
 
         public void RemoveAudioTrack() {
@@ -451,6 +483,18 @@ namespace SimpleWebRTC {
                     audioTrackSenders.Remove(peerConnection.Key);
                 }
             }
+        }
+
+        public bool CheckAudioTrackExist()
+        {
+            foreach (var peerConnection in peerConnections)
+            {
+                if (audioTrackSenders.ContainsKey(peerConnection.Key))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public void SendWebSocketMessage(string message) {

@@ -23,6 +23,11 @@ public class CallingUIHandler : MonoBehaviour
     [Header("WebRTCConnection ")]
     [SerializeField] private WebRTCConnection _webRtcConnection;
 
+    [Header("Popups ")]
+    [SerializeField] private GameObject _connectingPopup;
+    [SerializeField] private GameObject _connectedPopup;
+
+
 
     private void Awake()
     {
@@ -43,7 +48,24 @@ public class CallingUIHandler : MonoBehaviour
             _audioToggle.isOn = false;
             _videoToggle.isOn = false;
 
+        _connectingPopup.SetActive(false);
+        _connectedPopup.SetActive(false);
+        _audioToggle.gameObject.SetActive(false);
+        _videoToggle.gameObject.SetActive(false);
+
     }
+    private void OnEnable()
+    {
+        _webRtcConnection.OnConnectRequested += OnConnectionRequested;
+        _webRtcConnection.OnConnected += OnConnected;
+        
+    }
+    private void OnDisable()
+    {
+        _webRtcConnection.OnConnectRequested -= OnConnectionRequested;
+        _webRtcConnection.OnConnected -= OnConnected;
+    }
+
 
     private void OnAudioToggled(bool isOn)
     {
@@ -73,5 +95,32 @@ public class CallingUIHandler : MonoBehaviour
         }
     }
 
+    private void OnConnected()
+    {
+        Debug.LogError("cONNECTED");
+        _connectingPopup.SetActive(false);
+        _connectedPopup.SetActive(true);
+
+        _audioToggle.gameObject.SetActive(true);
+        _videoToggle.gameObject.SetActive(true);
+        StartCoroutine(OperationOnConnected());
+    }
+
+    private IEnumerator OperationOnConnected()
+    {
+        yield return new WaitForSeconds(0.5f);
+        _connectedPopup.SetActive(false);
+        //yield return new WaitForSeconds(0.3f);
+        //_videoToggle.isOn = true;
+        //yield return new WaitForSeconds(0.3f);
+        //_audioToggle.isOn = true;
+        
+    }
+
+    private void OnConnectionRequested()
+    {
+        _connectingPopup.SetActive(true);
+        Debug.LogError("Connection Requested");
+    }
 
 }

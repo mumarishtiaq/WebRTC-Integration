@@ -1,4 +1,5 @@
 using NativeWebSocket;
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -53,6 +54,12 @@ namespace SimpleWebRTC {
         public UnityEvent AudioTransmissionReceived;
 
         private WebRTCManager webRTCManager;
+
+        //these two actions will use to notify the UI
+        [HideInInspector]
+        public Action OnConnectRequested; 
+        [HideInInspector]
+        public Action OnConnected; 
 
         private void Awake() {
             SimpleWebRTCLogger.EnableLogging = ShowLogs;
@@ -121,10 +128,12 @@ namespace SimpleWebRTC {
                 webRTCManager.RemoveVideoTrack();
             }
 
+
             if (StartStopAudioTransmission && !IsAudioTransmissionActive) {
                 IsAudioTransmissionActive = !IsAudioTransmissionActive;
                 StreamingAudioSource.gameObject.SetActive(IsAudioTransmissionActive);
                 StreamingAudioSource.Play();
+                Debug.LogError("In Update audio testing");
                 webRTCManager.AddAudioTrack(StreamingAudioSource);
             }
 
@@ -133,6 +142,7 @@ namespace SimpleWebRTC {
                 StreamingAudioSource.Stop();
                 StreamingAudioSource.gameObject.SetActive(IsAudioTransmissionActive);
                 webRTCManager.RemoveAudioTrack();
+                Debug.LogError("in stop condition");
             }
         }
 
@@ -198,12 +208,20 @@ namespace SimpleWebRTC {
             LocalPeerId = playerName;
         }
 
+
+        public void ConnectBtn()
+        {
+            Connect();
+            OnConnectRequested?.Invoke();
+        }
+
         public void Connect() {
             WebSocketConnectionActive = true;
         }
 
         public void ConnectWebRTC() {
             WebRTCConnectionActive = true;
+            OnConnected?.Invoke();
         }
 
         public void Disconnect() {
@@ -226,6 +244,7 @@ namespace SimpleWebRTC {
             webRTCManager.SendViaDataChannel(targetPeerId, message);
         }
 
+        #region Video
         public void StartVideoTransmission() {
             if (IsVideoTransmissionActive) {
                 // for restarting without stopping
@@ -240,11 +259,20 @@ namespace SimpleWebRTC {
             StartStopVideoTransmission = false;
         }
 
+        #endregion Video
+
+        #region Audio
         public void StartAudioTransmission() {
-            if (IsAudioTransmissionActive) {
+
+            Debug.LogError("In method StartAudioTransmission()");
+            if (IsAudioTransmissionActive)
+            {
                 // for restarting without stopping
+
+                //StreamingAudioSource.Play(); //added by MUI
                 webRTCManager.RemoveAudioTrack();
                 webRTCManager.AddAudioTrack(StreamingAudioSource);
+            Debug.LogError("In method StartAudioTransmission() if condition");
             }
             StartStopAudioTransmission = true;
         }
@@ -252,6 +280,20 @@ namespace SimpleWebRTC {
         public void StopAudioTransmission() {
             StartStopAudioTransmission = false;
         }
+
+        [ContextMenu("Check For Audio Track")]
+        public void  testc()
+        {
+            Debug.LogError($"AudioTrackExist = {webRTCManager.CheckAudioTrackExist()}");
+        } 
+        
+        [ContextMenu("Check For AudioIsPlaying")]
+        public void  TestAudioIsPlaying()
+        {
+            Debug.LogError($"AudioIsPlaying = {StreamingAudioSource.isPlaying}");
+        }
+
+        #endregion Audio
 
         //Testing buttons
 
