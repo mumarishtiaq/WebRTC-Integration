@@ -27,6 +27,9 @@ public class CallingUIHandler : MonoBehaviour
     [SerializeField] private GameObject _connectingPopup;
     [SerializeField] private GameObject _connectedPopup;
 
+    [Header("Testing")]
+    [SerializeField] private GameObject _webSocketConnectionOpenedPopup;
+
 
 
     private void Awake()
@@ -50,6 +53,7 @@ public class CallingUIHandler : MonoBehaviour
 
         _connectingPopup.SetActive(false);
         _connectedPopup.SetActive(false);
+        _webSocketConnectionOpenedPopup.SetActive(false);
         _audioToggle.gameObject.SetActive(false);
         _videoToggle.gameObject.SetActive(false);
 
@@ -58,12 +62,27 @@ public class CallingUIHandler : MonoBehaviour
     {
         _webRtcConnection.OnConnectRequested += OnConnectionRequested;
         _webRtcConnection.OnConnected += OnConnected;
+        _webRtcConnection.OnWebSocketOpened += OnWebSocketOpened;
         
     }
     private void OnDisable()
     {
         _webRtcConnection.OnConnectRequested -= OnConnectionRequested;
         _webRtcConnection.OnConnected -= OnConnected;
+        _webRtcConnection.OnWebSocketOpened -= OnWebSocketOpened;
+    }
+
+    private void OnWebSocketOpened()
+    {
+        _webSocketConnectionOpenedPopup?.SetActive(true);
+        StartCoroutine(DelayPopupOff());
+    }
+    private IEnumerator DelayPopupOff()
+    {
+        yield return new WaitForSeconds(2);
+        _webSocketConnectionOpenedPopup.SetActive(false);
+        
+
     }
 
 

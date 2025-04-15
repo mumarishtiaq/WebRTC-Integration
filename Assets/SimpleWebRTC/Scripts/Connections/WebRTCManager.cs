@@ -53,7 +53,7 @@ namespace SimpleWebRTC {
 
                 ws.OnOpen += () => {
                     SimpleWebRTCLogger.Log("WebSocket connection opened!");
-
+                    connectionGameObject.OnWebSocketOpened?.Invoke();
                     IsWebSocketConnected = true;
                     IsWebSocketConnectionInProgress = false;
 

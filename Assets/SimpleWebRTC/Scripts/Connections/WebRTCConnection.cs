@@ -60,6 +60,8 @@ namespace SimpleWebRTC {
         public Action OnConnectRequested; 
         [HideInInspector]
         public Action OnConnected; 
+        [HideInInspector]
+        public Action OnWebSocketOpened; 
 
         private void Awake() {
             SimpleWebRTCLogger.EnableLogging = ShowLogs;
