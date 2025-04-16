@@ -1,6 +1,7 @@
 using NativeWebSocket;
 using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 namespace SimpleWebRTC {
@@ -10,6 +11,9 @@ namespace SimpleWebRTC {
         [SerializeField] private bool useHTTPHeader = true;
 
         private WebSocket webSocket;
+
+        public GameObject messagePrefab;
+        public Transform Holder;
 
         // Start is called before the first frame update
         async void Start() {
@@ -35,12 +39,14 @@ namespace SimpleWebRTC {
                 Debug.Log(bytes);
 
                 // getting the message as a string
-                // var message = System.Text.Encoding.UTF8.GetString(bytes);
+                var message = System.Text.Encoding.UTF8.GetString(bytes);
                 // Debug.Log("OnMessage! " + message);
+                var msg = Instantiate(messagePrefab, Holder);
+                msg.GetComponentInChildren<TextMeshProUGUI>().text = message;
             };
 
             // Keep sending messages at every 1s
-            InvokeRepeating(nameof(SendWebSocketMessage), 0.0f, 1f);
+            InvokeRepeating(nameof(SendWebSocketMessage), 0.0f, 5f);
 
             // waiting for messages
             await webSocket.Connect();
