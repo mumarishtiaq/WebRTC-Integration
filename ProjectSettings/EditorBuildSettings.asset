@@ -5,7 +5,7 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
+  - enabled: 1
     path: Assets/ChatRoom/Scenes/LipSyncAndWebRTCIntegrationScene.unity
     guid: a341bf93f59c4164bb779809f02a2d34
   - enabled: 0
@@ -14,7 +14,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/LipSync/Scene/LipSyncScene.unity
     guid: a0c8aa4336937d748b18935e4a11071e
-  - enabled: 1
+  - enabled: 0
     path: Assets/ChatRoom/ConnectionImprovementTestting/ConnectionTesting.unity
     guid: 8f02ba64d368aa843bd5cc84a5199eeb
   m_configObjects: {}

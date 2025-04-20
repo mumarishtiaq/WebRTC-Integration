@@ -25,10 +25,10 @@ namespace SimpleWebRTC {
         private readonly Dictionary<string, RTCPeerConnection> peerConnections = new Dictionary<string, RTCPeerConnection>();
         private readonly Dictionary<string, RTCDataChannel> senderDataChannels = new Dictionary<string, RTCDataChannel>();
         private readonly Dictionary<string, RTCDataChannel> receiverDataChannels = new Dictionary<string, RTCDataChannel>();
-        private readonly Dictionary<string, RTCRtpSender> videoTrackSenders = new Dictionary<string, RTCRtpSender>();
+        //private readonly Dictionary<string, RTCRtpSender> videoTrackSenders = new Dictionary<string, RTCRtpSender>();
         private readonly Dictionary<string, RTCRtpSender> audioTrackSenders = new Dictionary<string, RTCRtpSender>();
 
-        private readonly Dictionary<string, RawImage> videoReceivers = new Dictionary<string, RawImage>();
+        //private readonly Dictionary<string, RawImage> videoReceivers = new Dictionary<string, RawImage>();
         private readonly Dictionary<string, AudioSource> audioReceivers = new Dictionary<string, AudioSource>();
 
         private readonly string localPeerId;
@@ -117,6 +117,10 @@ namespace SimpleWebRTC {
                     // send completed to other peer of connection too
                     SendWebSocketMessage($"COMPLETE|{localPeerId}|{peerId}|Peerconnection between {localPeerId} and {peerId} completed.");
                 }
+                if(state == RTCIceConnectionState.Failed || state == RTCIceConnectionState.Closed || state == RTCIceConnectionState.Disconnected)
+                {
+                    connectionGameObject.OnDisconnected?.Invoke();
+                }
             };
 
             senderDataChannels.Add(peerId, peerConnections[peerId].CreateDataChannel(peerId));
@@ -145,13 +149,13 @@ namespace SimpleWebRTC {
             SimpleWebRTCLogger.LogDataChannel($"ReceiverDataChannel for {peerId} created on {localPeerId}.");
 
             peerConnections[peerId].OnTrack = e => {
-                if (e.Track is VideoStreamTrack video) {
-                    OnVideoStreamEstablished?.Invoke();
+                //if (e.Track is VideoStreamTrack video) {
+                //    OnVideoStreamEstablished?.Invoke();
 
-                    video.OnVideoReceived += tex => videoReceivers[peerId].texture = tex;
+                //    video.OnVideoReceived += tex => videoReceivers[peerId].texture = tex;
 
-                    SimpleWebRTCLogger.Log("Receiving video stream.");
-                }
+                //    SimpleWebRTCLogger.Log("Receiving video stream.");
+                //}
 
                 //Audio Receiving Code (ARC)
                 //commented by MUI
@@ -220,15 +224,17 @@ namespace SimpleWebRTC {
                         senderDataChannels.Remove(signalingMessage.SenderPeerId);
                         receiverDataChannels.Remove(signalingMessage.SenderPeerId);
 
-                        videoTrackSenders.Remove(signalingMessage.SenderPeerId);
-                        GameObject.Destroy(videoReceivers[signalingMessage.SenderPeerId].gameObject);
-                        videoReceivers.Remove(signalingMessage.SenderPeerId);
+                        //commented by MUI VideoCode(VC) 
+                        //videoTrackSenders.Remove(signalingMessage.SenderPeerId);
+                        //GameObject.Destroy(videoReceivers[signalingMessage.SenderPeerId].gameObject);
+                        //videoReceivers.Remove(signalingMessage.SenderPeerId);
 
                         audioTrackSenders.Remove(signalingMessage.SenderPeerId);
                         GameObject.Destroy(audioReceivers[signalingMessage.SenderPeerId].gameObject);
                         audioReceivers.Remove(signalingMessage.SenderPeerId);
 
                         SimpleWebRTCLogger.Log($"DISPOSE: Peerconnection for {signalingMessage.SenderPeerId} removed on peer {localPeerId}");
+                        connectionGameObject.OnDisconnected?.Invoke();
                     }
                     break;
                 case SignalingMessageType.DATA:
@@ -251,16 +257,17 @@ namespace SimpleWebRTC {
         }
 
         private void CreateNewPeer(string senderPeerId) {
+            //commented by MUI VideoCode(VC) 
             // create new video receiver gameobject
-            var receivingRawImage = new GameObject().AddComponent<RawImage>();
-            receivingRawImage.name = $"{senderPeerId}-Receiving-RawImage";
-            receivingRawImage.rectTransform.SetParent(connectionGameObject.ReceivingRawImagesParent, false);
-            receivingRawImage.rectTransform.localScale = Vector3.one;
-            receivingRawImage.rectTransform.anchorMin = Vector2.zero;
-            receivingRawImage.rectTransform.anchorMax = Vector2.one;
-            receivingRawImage.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            receivingRawImage.rectTransform.sizeDelta = Vector2.zero;
-            videoReceivers[senderPeerId] = receivingRawImage;
+            //var receivingRawImage = new GameObject().AddComponent<RawImage>();
+            //receivingRawImage.name = $"{senderPeerId}-Receiving-RawImage";
+            //receivingRawImage.rectTransform.SetParent(connectionGameObject.ReceivingRawImagesParent, false);
+            //receivingRawImage.rectTransform.localScale = Vector3.one;
+            //receivingRawImage.rectTransform.anchorMin = Vector2.zero;
+            //receivingRawImage.rectTransform.anchorMax = Vector2.one;
+            //receivingRawImage.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            //receivingRawImage.rectTransform.sizeDelta = Vector2.zero;
+            //videoReceivers[senderPeerId] = receivingRawImage; 
 
             // create new audio receiver gameobject
             var receivingAudioSource = new GameObject().AddComponent<AudioSource>();
@@ -355,9 +362,10 @@ namespace SimpleWebRTC {
                 receiverDataChannel.Value.Close();
             }
 
-            foreach (var videoTrackSender in videoTrackSenders) {
-                videoTrackSender.Value.Dispose();
-            }
+            //commented by MUI VideoCode(VC) 
+            //foreach (var videoTrackSender in videoTrackSenders) {
+            //    videoTrackSender.Value.Dispose();
+            //}
             foreach (var audioTrackSender in audioTrackSenders) {
                 audioTrackSender.Value.Dispose();
             }
@@ -374,11 +382,11 @@ namespace SimpleWebRTC {
             senderDataChannels.Clear();
             receiverDataChannels.Clear();
 
-            videoTrackSenders.Clear();
-            foreach (var videoReceiver in videoReceivers) {
-                GameObject.Destroy(videoReceiver.Value.gameObject);
-            }
-            videoReceivers.Clear();
+            //videoTrackSenders.Clear();
+            //foreach (var videoReceiver in videoReceivers) {
+            //    GameObject.Destroy(videoReceiver.Value.gameObject);
+            //}
+            //videoReceivers.Clear();
 
             audioTrackSenders.Clear();
             foreach (var audioReceiver in audioReceivers) {
@@ -422,19 +430,21 @@ namespace SimpleWebRTC {
                 connectionGameObject.OptionalPreviewRawImage.texture = videoStreamTrack.Texture;
             }
 
-            foreach (var peerConnection in peerConnections) {
-                videoTrackSenders.Add(peerConnection.Key, peerConnection.Value.AddTrack(videoStreamTrack));
-            }
+            //commented by MUI VideoCode(VC) 
+            //foreach (var peerConnection in peerConnections) {
+            //    videoTrackSenders.Add(peerConnection.Key, peerConnection.Value.AddTrack(videoStreamTrack));
+            //}
             connectionGameObject.StartCoroutine(CreateOffer());
         }
 
         public void RemoveVideoTrack() {
-            foreach (var peerConnection in peerConnections) {
-                if (videoTrackSenders.ContainsKey(peerConnection.Key)) {
-                    peerConnection.Value.RemoveTrack(videoTrackSenders[peerConnection.Key]);
-                    videoTrackSenders.Remove(peerConnection.Key);
-                }
-            }
+            //commented by MUI VideoCode(VC) 
+            //foreach (var peerConnection in peerConnections) {
+            //    if (videoTrackSenders.ContainsKey(peerConnection.Key)) {
+            //        peerConnection.Value.RemoveTrack(videoTrackSenders[peerConnection.Key]);
+            //        videoTrackSenders.Remove(peerConnection.Key);
+            //    }
+            //}
             // reset optional video stream preview
             if (connectionGameObject.OptionalPreviewRawImage != null) {
                 connectionGameObject.OptionalPreviewRawImage.texture = null;
@@ -442,38 +452,52 @@ namespace SimpleWebRTC {
         }
 
         //Audio sending code (ASC)
-        public void AddAudioTrack(AudioSource streamingAudioSource) {
+        public void AddAudioTrack(StreamingMicInput micInput) {
             //var audioStreamTrack = new AudioStreamTrack(streamingAudioSource) {
             //    Loopback = true  //commented by MUI
             //};
-            if (Microphone.devices.Length > 0)
+            //if (Microphone.devices.Length > 0)
+            //{
+            //    string micDevice = Microphone.devices[0];
+            //    Debug.Log("Using mic: " + micDevice);
+            //    // Proceed with starting microphone
+
+            //    streamingAudioSource.loop = true;
+            //    streamingAudioSource.clip = Microphone.Start(micDevice, true, 1, 44100);
+
+            //    while (!(Microphone.GetPosition(micDevice) > 0)) { } // wait for mic to start
+            //    streamingAudioSource.Play();
+
+            //    var audioStreamTrack = new AudioStreamTrack(streamingAudioSource)
+            //    {
+            //        Loopback = false
+            //    };
+            //    foreach (var peerConnection in peerConnections)
+            //    {
+            //        audioTrackSenders.Add(peerConnection.Key, peerConnection.Value.AddTrack(audioStreamTrack));
+            //    }
+            //    connectionGameObject.StartCoroutine(CreateOffer());
+            //}
+            //else
+            //{
+            //    //TODO
+            //    //show error on UI
+            //    Debug.LogError("No microphone Detected");
+            //}
+
+            micInput.StartMicrophone();
+
+            var audioStreamTrack = new AudioStreamTrack(micInput.audioSource)
             {
-                string micDevice = Microphone.devices[0];
-                Debug.Log("Using mic: " + micDevice);
-                // Proceed with starting microphone
+                Loopback = false
+            };
+          
 
-                streamingAudioSource.loop = true;
-                streamingAudioSource.clip = Microphone.Start(micDevice, true, 1, 44100);
-
-                while (!(Microphone.GetPosition(micDevice) > 0)) { } // wait for mic to start
-                streamingAudioSource.Play();
-
-                var audioStreamTrack = new AudioStreamTrack(streamingAudioSource)
-                {
-                    Loopback = false
-                };
-                foreach (var peerConnection in peerConnections)
-                {
-                    audioTrackSenders.Add(peerConnection.Key, peerConnection.Value.AddTrack(audioStreamTrack));
-                }
-                connectionGameObject.StartCoroutine(CreateOffer());
-            }
-            else
+            foreach (var peerConnection in peerConnections)
             {
-                //TODO
-                //show error on UI
-                Debug.LogError("No microphone Detected");
+                audioTrackSenders.Add(peerConnection.Key, peerConnection.Value.AddTrack(audioStreamTrack));
             }
+            connectionGameObject.StartCoroutine(CreateOffer());
         }
 
         public void RemoveAudioTrack() {
@@ -485,8 +509,13 @@ namespace SimpleWebRTC {
             }
         }
 
+       
+
         public bool CheckAudioTrackExist()
         {
+            Debug.Log("Peer Connections Count " +peerConnections.Count);
+            Debug.Log("Audio Track Sender Count " + audioTrackSenders.Count);
+            Debug.Log("Audio Track receivers Count " + audioReceivers.Count);
             foreach (var peerConnection in peerConnections)
             {
                 if (audioTrackSenders.ContainsKey(peerConnection.Key))

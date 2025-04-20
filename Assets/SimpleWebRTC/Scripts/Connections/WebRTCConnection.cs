@@ -1,5 +1,6 @@
 using NativeWebSocket;
 using System;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -49,7 +50,7 @@ namespace SimpleWebRTC {
 
         [Header("Audio Transmission")]
         [SerializeField] private bool StartStopAudioTransmission = false;
-        [SerializeField] private AudioSource StreamingAudioSource;
+        [SerializeField] private StreamingMicInput streamingMicInput;
         public Transform ReceivingAudioSourceParent;
         public UnityEvent AudioTransmissionReceived;
 
@@ -58,14 +59,20 @@ namespace SimpleWebRTC {
         //these two actions will use to notify the UI
         [HideInInspector]
         public Action OnConnectRequested; 
-        [HideInInspector]
-        public Action OnConnected; 
+        //[HideInInspector]
+        //public Action OnConnected; 
         [HideInInspector]
         public Action OnWebSocketOpened; 
+        
+        [HideInInspector]
+        public Action OnDisconnected; 
 
         private void Awake() {
             SimpleWebRTCLogger.EnableLogging = ShowLogs;
             SimpleWebRTCLogger.EnableDataChannelLogging = ShowDataChannelLogs;
+            //Application.runInBackground = true;
+
+            LocalPeerId = GenerateCode();
 
             webRTCManager = new WebRTCManager(LocalPeerId, StunServerAddress, this);
 
@@ -131,21 +138,21 @@ namespace SimpleWebRTC {
             }
 
 
-            if (StartStopAudioTransmission && !IsAudioTransmissionActive) {
-                IsAudioTransmissionActive = !IsAudioTransmissionActive;
-                StreamingAudioSource.gameObject.SetActive(IsAudioTransmissionActive);
-                StreamingAudioSource.Play();
-                Debug.LogError("In Update audio testing");
-                webRTCManager.AddAudioTrack(StreamingAudioSource);
-            }
+            //if (StartStopAudioTransmission && !IsAudioTransmissionActive) {
+            //    IsAudioTransmissionActive = !IsAudioTransmissionActive;
+            //    streamingMicInput.gameObject.SetActive(IsAudioTransmissionActive);
+            //    streamingMicInput.StartMicrophone();
+            //    Debug.LogError("In Update audio testing");
+            //    webRTCManager.AddAudioTrack(streamingMicInput);
+            //}
 
-            if (!StartStopAudioTransmission && IsAudioTransmissionActive) {
-                IsAudioTransmissionActive = !IsAudioTransmissionActive;
-                StreamingAudioSource.Stop();
-                StreamingAudioSource.gameObject.SetActive(IsAudioTransmissionActive);
-                webRTCManager.RemoveAudioTrack();
-                Debug.LogError("in stop condition");
-            }
+            //if (!StartStopAudioTransmission && IsAudioTransmissionActive) {
+            //    IsAudioTransmissionActive = !IsAudioTransmissionActive;
+            //    //streamingMicInput.Stop();
+            //    streamingMicInput.gameObject.SetActive(IsAudioTransmissionActive);
+            //    webRTCManager.RemoveAudioTrack();
+            //    Debug.LogError("in stop condition");
+            //}
         }
 
         private void OnEnable() {
@@ -194,16 +201,18 @@ namespace SimpleWebRTC {
             // stop audio
             StartStopAudioTransmission = false;
             IsAudioTransmissionActive = false;
-            StreamingAudioSource.Stop();
-            StreamingAudioSource.gameObject.SetActive(IsAudioTransmissionActive);
+            //streamingMicInput.Stop();
+            streamingMicInput.StopMicrophone();
+            streamingMicInput.gameObject.SetActive(IsAudioTransmissionActive);
             webRTCManager.RemoveAudioTrack();
 
             webRTCManager.CloseWebRTC();
             webRTCManager.CloseWebSocket();
 
             StreamingCamera.gameObject.SetActive(false);
-            StreamingAudioSource.Stop();
-            StreamingAudioSource.gameObject.SetActive(false);
+            //streamingMicInput.Stop();
+            streamingMicInput.gameObject.SetActive(false);
+            OnDisconnected?.Invoke();
         }
 
         public void SetUniquePlayerName(string playerName) {
@@ -223,7 +232,7 @@ namespace SimpleWebRTC {
 
         public void ConnectWebRTC() {
             WebRTCConnectionActive = true;
-            OnConnected?.Invoke();
+            //OnConnected?.Invoke();
         }
 
         public void Disconnect() {
@@ -266,21 +275,38 @@ namespace SimpleWebRTC {
         #region Audio
         public void StartAudioTransmission() {
 
-            Debug.LogError("In method StartAudioTransmission()");
-            if (IsAudioTransmissionActive)
-            {
-                // for restarting without stopping
+            Debug.LogError($"IsAudioTransmissionActive :  {IsAudioTransmissionActive}");
+           // if (IsAudioTransmissionActive)
+            //{
+            //    // for restarting without stopping
 
-                //StreamingAudioSource.Play(); //added by MUI
-                webRTCManager.RemoveAudioTrack();
-                webRTCManager.AddAudioTrack(StreamingAudioSource);
-            Debug.LogError("In method StartAudioTransmission() if condition");
-            }
+            //    //StreamingAudioSource.Play(); //added by MUI
+            //    webRTCManager.RemoveAudioTrack();
+            //    webRTCManager.AddAudioTrack(streamingMicInput);
+            //Debug.LogError("In method StartAudioTransmission() if condition");
+            //}
             StartStopAudioTransmission = true;
+
+
+            
+                //IsAudioTransmissionActive = !IsAudioTransmissionActive;
+                streamingMicInput.gameObject.SetActive(true);
+                webRTCManager.RemoveAudioTrack();
+                streamingMicInput.StartMicrophone();
+                webRTCManager.AddAudioTrack(streamingMicInput);
+            
         }
 
         public void StopAudioTransmission() {
             StartStopAudioTransmission = false;
+
+
+            //IsAudioTransmissionActive = !IsAudioTransmissionActive;
+            streamingMicInput.audioSource.Stop();
+            streamingMicInput.gameObject.SetActive(false);
+                webRTCManager.RemoveAudioTrack();
+                Debug.LogError("in stop condition");
+            
         }
 
         [ContextMenu("Check For Audio Track")]
@@ -292,7 +318,7 @@ namespace SimpleWebRTC {
         [ContextMenu("Check For AudioIsPlaying")]
         public void  TestAudioIsPlaying()
         {
-            Debug.LogError($"AudioIsPlaying = {StreamingAudioSource.isPlaying}");
+            Debug.LogError($"AudioIsPlaying = {streamingMicInput.audioSource.isPlaying}");
         }
 
         #endregion Audio
@@ -316,6 +342,23 @@ namespace SimpleWebRTC {
             StartStopAudioTransmission = true;
             Debug.LogError("Start Audio Transmission is activated");
         }
+
+
+        static System.Random random = new System.Random();
+        private string GenerateCode()
+        {
+            // Generate 5 random uppercase letters
+            string letters = new string(Enumerable.Range(0, 5)
+                .Select(_ => (char)random.Next('A', 'Z' + 1)).ToArray());
+
+            // Generate 3 random digits
+            string numbers = new string(Enumerable.Range(0, 3)
+                .Select(_ => (char)random.Next('0', '9' + 1)).ToArray());
+
+            return $"{letters}_{numbers}";
+        }
+
+        
 
     }
 }
