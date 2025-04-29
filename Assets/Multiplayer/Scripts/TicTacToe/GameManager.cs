@@ -58,7 +58,7 @@ namespace TicTacToe
 
         private PlayerType localPlayerType;
         private NetworkVariable<PlayerType> currentPlayablePlayerType = new NetworkVariable<PlayerType>();
-        [SerializeField]private PlayerType[,] playerTypeArray;
+        private PlayerType[,] playerTypeArray;
         private List<Line> lineList;
         private NetworkVariable<int> playerCrossScore = new NetworkVariable<int>();
         private NetworkVariable<int> playerCircleScore = new NetworkVariable<int>();
@@ -173,12 +173,13 @@ namespace TicTacToe
         }
 
         [Rpc(SendTo.Server)]
-        public void ClickedOnGridPositionRpc(int x, int y)
+        public void ClickedOnGridPositionRpc(int x, int y, PlayerType playerType)
         {
             Debug.Log("ClickedOnGridPosition " + x + ", " + y);
-            var playerType = GetLocalPlayerType();
+
             if (playerType != currentPlayablePlayerType.Value)
             {
+                Debug.Log("in");
                 return;
             }
 

@@ -13,7 +13,7 @@ namespace TicTacToe
         private void OnMouseDown()
         {
             Debug.Log("Click! " + x + ", " + y);
-            GameManager.Instance.ClickedOnGridPositionRpc(x, y);
+            GameManager.Instance.ClickedOnGridPositionRpc(x, y,GameManager.Instance.GetLocalPlayerType());
         }
 
     }
