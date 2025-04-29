@@ -121,6 +121,9 @@ namespace Agora_RTC_Plugin.API_Example.Examples.Basic.JoinChannelAudio
             RtcEngine.EnableAudio();
             RtcEngine.SetChannelProfile(CHANNEL_PROFILE_TYPE.CHANNEL_PROFILE_COMMUNICATION);
             RtcEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
+#if UNITY_IOS || UNITY_ANDROID
+            RtcEngine.SetDefaultAudioRouteToSpeakerphone(true);
+#endif
             RtcEngine.EnableAudioVolumeIndication(200, 3, true);
         }
 
@@ -144,7 +147,10 @@ namespace Agora_RTC_Plugin.API_Example.Examples.Basic.JoinChannelAudio
 
         public void JoinChannel()
         {
-            RtcEngine.JoinChannel(_token, _channelName, "", 0);
+           var  state = RtcEngine.JoinChannel(_token, _channelName, "", 0);
+            Debug.Log($"Joining State : {state}");
+            this.Log.UpdateLog($"Joining State : {state}");
+            
         }
 
         public void LeaveChannel()
@@ -331,6 +337,7 @@ namespace Agora_RTC_Plugin.API_Example.Examples.Basic.JoinChannelAudio
         {
             _audioSample.Log.UpdateLog("OnLeaveChannel");
             _audioSample.ClearAudioCallQualityPanel();
+            Debug.Log(connection.channelId);
         }
 
         public override void OnClientRoleChanged(RtcConnection connection, CLIENT_ROLE_TYPE oldRole, CLIENT_ROLE_TYPE newRole, ClientRoleOptions newRoleOptions)

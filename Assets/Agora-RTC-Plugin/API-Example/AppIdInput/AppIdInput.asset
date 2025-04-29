@@ -3,14 +3,15 @@
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 310468f085ef24732beac714c9bb64fd, type: 3}
   m_Name: AppIdInput
   m_EditorClassIdentifier: 
-  appID: 
-  token: 
-  channelName: Unity_Channel
+  appID: e07a37c91485473abe57221b3bccc0f0
+  token: 007eJxTYDifb7Nm+T2JwJtfFU3Ljj7Ua/3QG1z0+ORz3tVFf641r5+owJBqYJ5obJ5saWhiYWpibpyYlGpqbmRkmGSclJycbJBmkCrHm9EQyMjA7qnNwAiFIL4oQ0hqcUloXmZJpWNpSma+c0ZiXl5qDgMDAGqzJyI=
+  channelName: TestUnityAudioChannel

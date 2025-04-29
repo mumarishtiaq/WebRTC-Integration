@@ -1,0 +1,20 @@
+using UnityEngine;
+
+namespace TicTacToe
+{
+    public class GridPosition : MonoBehaviour
+    {
+
+
+        [SerializeField] private int x;
+        [SerializeField] private int y;
+
+
+        private void OnMouseDown()
+        {
+            Debug.Log("Click! " + x + ", " + y);
+            GameManager.Instance.ClickedOnGridPositionRpc(x, y);
+        }
+
+    }
+}
