@@ -14,20 +14,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentVersion: 1.00
   subtype: tictactoengofree
-  lastShownTimestamp: 1745921901
+  lastShownTimestamp: 1746161941
   lastUpdateResponse:
     version: 1.00
     versionUrl: https://unitycodemonkey.com
-  checkedLastUpdateTimestamp: 1745921901
+  checkedLastUpdateTimestamp: 1746161941
   lastQOTDResponse:
-    questionId: 175
-    questionText: When you create a new script, do you always have to extend MonoBehaviour?
+    questionId: 176
+    questionText: 'Let''s say I saved my game data in a text file and I am now trying
+      to load it, does this work?
+
+      <p>string savedHealthData = "100";</p>
+
+      <p>int
+      healthAmount = savedHealthData;</p>'
     answerA: Yes
     answerB: No
-    answerC: Only if you want to use it as a Game Object Component
+    answerC: Yes but healthAmount will be 0
     answerD: 
     answerE: 
-  lastQotdTimestamp: 1745921901
+  lastQotdTimestamp: 1746161941
   lastDynamicHeaderResponse:
     topImageUrl: https://codemonkeyexternal.blob.core.windows.net/external/Misc/assetStoreSpringSale25.png
     topText: Spring Sale on the Asset Store, browse the Daily FLASH DEALS list to
@@ -36,19 +42,19 @@ MonoBehaviour:
     bottomText: Learn to get more WISHLISTS and SALES! (Spring Sale Discount Ends
       SOON!)
     bottomLink: howtomarketagame
-  lastDynamicHeaderTimestamp: 1745921901
+  lastDynamicHeaderTimestamp: 1746161941
   websiteLatestMessage:
     text: <a href="https://cmonkey.co/freecourses">Check out all my FREE courses!
       Click here!</a>
-  websiteLatestMessageTimestamp: 1745921901
+  websiteLatestMessageTimestamp: 1746161941
   websiteLatestVideos:
     videos:
+    - youTubeId: IdsXZHcgHSU
+      title: The ONE Asset you MUST HAVE!
     - youTubeId: YS6Jhj0nqgc
       title: Do Gamers recognize Asset Packs?
     - youTubeId: 6IF6Sgoj4R4
       title: What makes a Game LOW EFFORT?
     - youTubeId: WMYY2GBjdcE
       title: AWESOME Assets 70% OFF! (Make something FUN with the Spring Sale!)
-    - youTubeId: TZtbhCoff9Y
-      title: I found a MAGICAL GitHub project! (FREE Desktop in Unity!)
-  websiteLatestVideosTimestamp: 1745921901
+  websiteLatestVideosTimestamp: 1746161941

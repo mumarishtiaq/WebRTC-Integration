@@ -56,7 +56,7 @@ namespace TicTacToe
         }
 
 
-        private PlayerType localPlayerType;
+        public PlayerType localPlayerType;
         private NetworkVariable<PlayerType> currentPlayablePlayerType = new NetworkVariable<PlayerType>();
         private PlayerType[,] playerTypeArray;
         private List<Line> lineList;
