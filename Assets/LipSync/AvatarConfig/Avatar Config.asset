@@ -16,7 +16,7 @@ MonoBehaviour:
   Pose: 0
   TextureAtlas: 1
   TextureSizeLimit: 1024
-  TextureChannel: 0000000001000000
+  TextureChannel: 0000000001000000020000000300000004000000
   UseHands: 0
   UseDracoCompression: 0
   UseMeshOptCompression: 1
@@ -65,3 +65,4 @@ MonoBehaviour:
   - mouthSmile
   - eyeBlinkLeft
   - eyeBlinkRight
+  - mouthOpen
