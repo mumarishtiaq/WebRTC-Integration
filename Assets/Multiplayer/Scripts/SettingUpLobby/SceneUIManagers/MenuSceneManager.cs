@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -9,13 +12,29 @@ using UnityEngine.UI;
 
 public class MenuSceneManager : MonoBehaviour
 {
-    [SerializeField] private Button _joinBtn; 
-    [SerializeField] private Button _exitBtn;
+    [SerializeField] private MenuSceneView _sceneView;
+
+    private PeerData _peerData =>MultiplayerManager.Instance.PeerData;
 
     int m_HostMaxPlayers = 2;
-    private void Awake()
+
+    bool isHost => LobbyManager.Instance.isHost;
+
+    private void Start()
     {
-        _joinBtn.onClick.AddListener(OnJoinRoom);
+        _sceneView.JoinBtn.onClick.AddListener(OnJoinRoomTest);
+        LobbyManager.OnLobbyChanged += OnLobbyChanged;
+    }
+
+
+    public void ActivateMainMenuUI(string playerName)
+    {
+        _sceneView.SetInteractable(true);
+        _sceneView.SetPlayerData(playerName);
+    }
+    public void DeActivateMainMenuUI()
+    {
+        _sceneView.SetInteractable(false);
     }
 
     private async void OnJoinRoom()
@@ -23,23 +42,25 @@ public class MenuSceneManager : MonoBehaviour
         try
         {
             // used for setting interactions off TODO
-            //sceneView.SetInteractable(false);
-            var player = MultiplayerManager.Instance._playerData;
+            _sceneView.SetInteractable(false);
+            var playerData = _peerData.LP;
 
             //checking if the lobby is already created or not 
             LoadingManager.Instance.EnableLoading("Fetching Room Details");
-            var lobbies = await LobbyManager.Instance.GetPublicLobbies(player.ChannelName);
+
+            (_,List<Lobby> lobbies)  = await DoLobbyExist();
+
             LoadingManager.Instance.EnableLoading("Joining Room");
 
             //this means lobby is not created and this will be the host
             if (lobbies.Count == 0)
             {
-                await JoinAsHost(player);
+                await JoinAsHost(playerData,_peerData.CommonRoomName);
             }
             //this means lobby is already created now this will be client
             else
             {
-                await JoinAsClient(player, lobbies[0]);
+                await JoinAsClient(playerData, lobbies[0]);
             }
         }
         catch (Exception e)
@@ -48,18 +69,72 @@ public class MenuSceneManager : MonoBehaviour
         }
     }
 
-    private async Task JoinAsHost(PlayerData player)
+    private async void OnJoinRoomTest()
+    {
+        try
+        {
+            // used for setting interactions off TODO
+            _sceneView.SetInteractable(false);
+            var playerData = _peerData.LP;
+
+            //checking if the lobby is already created or not 
+            LoadingManager.Instance.EnableLoading("Fetching Room Details");
+
+            if(_peerData.LP.Role == PlayerRole.Host)
+            {
+                LoadingManager.Instance.EnableLoading("Joining Room");
+                await JoinAsHost(playerData, _peerData.CommonRoomName);
+                LoadingManager.Instance.EnableLoading("Room Joined", true);
+                _sceneView.SetInteractable(true);
+                _sceneView.WaitingForOtherPlayer(true);
+
+            }
+            //client
+            else
+            {
+                    LoadingManager.Instance.EnableLoading("Joining Room");
+                (bool DoExist, List<Lobby> lobbies) = await DoLobbyExist();
+
+                //this means lobby is already created by host
+                if(DoExist)
+                {
+                    await JoinAsClient(playerData, lobbies[0]);
+                    LoadingManager.Instance.EnableLoading("Room Joined", true);
+                    _sceneView.SetInteractable(true);
+                }
+                else
+                {
+                    LoadingManager.Instance.DisableLoading();
+                    _sceneView.SetInteractable(true);
+                    ShowAnotherPlayerNotJoinedYetPopup();
+
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
+    }
+
+    private async Task<(bool exists, List<Lobby> lobbies)> DoLobbyExist()
+    {
+        var lobbies = await LobbyManager.Instance.GetPublicLobbies(_peerData.CommonRoomName);
+        return (lobbies.Count > 0, lobbies);
+    }
+
+
+    private async Task JoinAsHost(PlayerData player,string commonRoomName)
     {
         var relayJoinCode = await NetworkServiceManager.Instance.InitializeHost(m_HostMaxPlayers);
         if (this == null) return;
 
 
-        var lobby = await LobbyManager.Instance.CreateLobby(player.ChannelName, player.Name, relayJoinCode);
+        var lobby = await LobbyManager.Instance.CreateLobby(commonRoomName, player.Name, relayJoinCode);
 
         LoadingManager.Instance.EnableLoading("Loading Room");
         if (this == null) return;
 
-        await LoadLobbyScene();
     }
 
     private async Task JoinAsClient(PlayerData player, Lobby lobbyToJoin)
@@ -83,7 +158,7 @@ public class MenuSceneManager : MonoBehaviour
             {
                 var relayJoinCode = lobbyJoined.Data[LobbyManager.k_RelayJoinCodeKey].Value;
                 await NetworkServiceManager.Instance.InitializeClient(relayJoinCode);
-                await LoadLobbyScene();
+                //await LoadLobbyScene();
             }
 
         }
@@ -104,8 +179,21 @@ public class MenuSceneManager : MonoBehaviour
             if (this != null)
             {
                 //interactables back to true TODO
-                //sceneView.SetInteractable(true);
+                _sceneView.SetInteractable(true);
             }
+        }
+    }
+
+    void OnLobbyChanged(Lobby updatedLobby)
+    {
+        if (isHost)
+        {
+            //OnHostLobbyChanged(updatedLobby, isGameReady);
+            Debug.LogError("Update Lobby on host side");
+            _sceneView.SetRemotePlayerName(_peerData.RP.Name);
+            _sceneView.SetInteractable(true);
+            _sceneView.WaitingForOtherPlayer(false);
+
         }
     }
     private async Task LoadLobbyScene()
@@ -127,5 +215,18 @@ public class MenuSceneManager : MonoBehaviour
         //sceneView.ShowPopup("Lobby Full", "The lobby you attempted to join is full.\n\nPlease try a different lobby.");
         Debug.LogWarning("The lobby you attempted to join is full.\n\nPlease try a different lobby.");
 
+    } 
+    
+    void ShowAnotherPlayerNotJoinedYetPopup()
+    {
+        //TODO
+        _sceneView.ShowPopup("Player Unavailable", "Another player has not been joined yet.");
+        Debug.LogWarning("Another player has not been joined yet.");
+
+    }
+
+    void OnDestroy()
+    {
+        LobbyManager.OnLobbyChanged -= OnLobbyChanged;
     }
 }

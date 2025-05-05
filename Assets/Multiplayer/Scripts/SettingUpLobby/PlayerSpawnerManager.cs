@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerSpawnerManager : NetworkBehaviour
 {
-    [SerializeField] private PlayerType _localPlayerType;
+    [SerializeField] private PlayerGender _localPlayerType;
 
     [Header("Male And Female Prefabs")]
     [SerializeField] private GameObject _malePrefab;
@@ -26,11 +26,11 @@ public class PlayerSpawnerManager : NetworkBehaviour
 
         if (NetworkManager.Singleton.LocalClientId == 0)
         {
-            _localPlayerType = PlayerType.Male;
+            _localPlayerType = PlayerGender.Male;
         }
         else
         {
-            _localPlayerType = PlayerType.Female;
+            _localPlayerType = PlayerGender.Female;
         }
 
 
@@ -42,11 +42,11 @@ public class PlayerSpawnerManager : NetworkBehaviour
 
     [Rpc(SendTo.Server)]
 
-    private void SpawnPrefabRpc(PlayerType localPlayerType)
+    private void SpawnPrefabRpc(PlayerGender localPlayerType)
     {
 
-        var prefab = localPlayerType == PlayerType.Male?_malePrefab:_femalePrefabs;
-        var spawnPos = localPlayerType == PlayerType.Male? _hostSpawnPos : _clientSpawnPos;
+        var prefab = localPlayerType == PlayerGender.Male?_malePrefab:_femalePrefabs;
+        var spawnPos = localPlayerType == PlayerGender.Male? _hostSpawnPos : _clientSpawnPos;
 
 
         GameObject character = Instantiate(prefab, spawnPos.position, Quaternion.identity);
@@ -58,16 +58,11 @@ public class PlayerSpawnerManager : NetworkBehaviour
     }
 
 
-    public PlayerType GetLocalPlayerType()
+    public PlayerGender GetLocalPlayerType()
     {
         return _localPlayerType;
     }
 }
 
-public enum PlayerType
-{
-    None,
-    Male,
-    Female
-}
+
 

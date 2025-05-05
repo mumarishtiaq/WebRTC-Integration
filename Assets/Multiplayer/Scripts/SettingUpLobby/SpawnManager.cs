@@ -17,11 +17,11 @@ public class SpawnManager : MonoBehaviour
     private Transform _playerParent;
 
 
-    public void SpawnPlayer(PlayerType playerType)
+    public void SpawnPlayer(PlayerGender playerType)
     {
         if (!_avatars) return;
 
-        var prefab = playerType == PlayerType.Male ? _avatars.MalePrefabs[0] : _avatars.FemalePrefabs[0];
+        var prefab = playerType == PlayerGender.Male ? _avatars.MalePrefabs[0] : _avatars.FemalePrefabs[0];
 
         GameObject character = Instantiate(prefab);
     }

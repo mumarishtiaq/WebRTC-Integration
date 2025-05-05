@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using UnityEngine;
 
 
@@ -6,9 +7,16 @@ public class MultiplayerManager : MonoBehaviour
 {
     public static MultiplayerManager Instance;
 
-    public PlayerData _playerData;
+    [SerializeField] private EnvironmentType _currentEnvironment;
+
+    public PeerData PeerData;
 
     [SerializeField] private SpawnManager _spawnManager;
+    [SerializeField] private MenuSceneManager _menuSceneManager;
+
+    public bool isInitialized { get; private set; }
+
+
     private async void Awake()
     {
         if (Instance != null && Instance != this)
@@ -27,13 +35,50 @@ public class MultiplayerManager : MonoBehaviour
     }
     async void Start()
     {
+        if (_currentEnvironment == EnvironmentType.Development)
+        {
+            // Show popup and wait for selection
+            await ShowDevelopmentPopupAndWait();
+        }
+
+        await InitializeMultiplayer();
+    }
+
+    private async Task ShowDevelopmentPopupAndWait()
+    {
+        Debug.Log("Development mode detected. Showing player selection popup...");
+        LoadingManager.Instance.DisableLoading();
+        // Show your popup UI
+        DevelopmentPopupUI.Instance.ShowPopup();
+
+        // Wait until player makes a selection
+        bool isHost = await DevelopmentPopupUI.Instance.WaitForPlayerSelection();
+
+        // Populate dummy data based on selection
+        PeerData = await PlayerDataFetcher.PopulateDummyData(isHost);
+    }
+
+    private async Task InitializeMultiplayer()
+    {
         try
         {
+            _menuSceneManager.DeActivateMainMenuUI();
             LoadingManager.Instance.EnableLoading("Loading Player");
             DontDestroyOnLoad(gameObject);
-            await AuthenticationManager.SignInAnonymously(_playerData.Name);
 
-            _spawnManager.SpawnPlayer(_playerData.Type);
+            if(_currentEnvironment == EnvironmentType.Release)
+                PeerData = await PlayerDataFetcher.FetchDataFromApp();
+
+
+            await AuthenticationManager.SignInAnonymously(PeerData.LP.Name);
+
+            // Check that scene has not been unloaded while processing async wait to prevent throw.
+            if (this == null) return;
+
+            isInitialized = true;
+
+            _menuSceneManager.ActivateMainMenuUI(PeerData.LP.Name);
+            _spawnManager.SpawnPlayer(PeerData.LP.Gender);
             LoadingManager.Instance.DisableLoading();
         }
         catch (Exception e)
@@ -42,6 +87,8 @@ public class MultiplayerManager : MonoBehaviour
         }
     }
 
+
+
     void OnDestroy()
     {
         if (Instance == this)
@@ -49,24 +96,13 @@ public class MultiplayerManager : MonoBehaviour
             Instance = null;
         }
     }
-
-    [ContextMenu("Populate")]
-    private void PopulateDummyForSecondInstance()
-    {
-        _playerData = new PlayerData { 
-            Id = "defg",
-            Name = "Marry",
-            Type = PlayerType.Female,
-            ChannelName = "John_Marry"
-        };
-    }
 }
-[Serializable]
-public class PlayerData
+
+
+
+public enum EnvironmentType
 {
-    public string Id;
-    public string Name;
-    public PlayerType Type;
-    public string ChannelName;
+    Development,
+    Release
 }
 

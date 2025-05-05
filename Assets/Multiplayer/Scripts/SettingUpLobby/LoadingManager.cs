@@ -25,13 +25,13 @@ public class LoadingManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    public void EnableLoading(string msg = "Loading ...",bool isDisableAfterInterval = false)
+    public void EnableLoading(string msg = "Loading ...",bool isDisableAfterInterval = false,float interval = 2f)
     {
         _animationObj.SetActive(true);
         _loadingMsg.text = msg;
 
         if(isDisableAfterInterval)
-            Invoke(nameof(DisableLoading),3f);
+            Invoke(nameof(DisableLoading),interval);
     }
     public void DisableLoading()
     {

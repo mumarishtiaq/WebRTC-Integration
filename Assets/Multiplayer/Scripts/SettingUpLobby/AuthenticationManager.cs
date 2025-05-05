@@ -20,6 +20,7 @@ public static class AuthenticationManager
         }
         catch (Exception e)
         {
+            //TODO: show popup on sign in failed
             Debug.LogException(e);
         }
     }

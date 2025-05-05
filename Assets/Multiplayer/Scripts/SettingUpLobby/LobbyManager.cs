@@ -39,9 +39,21 @@ public class LobbyManager : MonoBehaviour
 
     bool m_WasGameStarted = false;
 
+    float m_NextHostHeartbeatTime;
+
+    float m_NextUpdatePlayersTime;
+
+    public static event Action<Lobby> OnLobbyChanged;
+
+
+
     // Frequency for host to call SendHeartbeatPingAsync to keep lobby active.
     // Note that if called to frequently, this will result in rate limit exceptions.
     const float k_HostHeartbeatFrequency = 15;
+
+    // Frequency to call GetLobbyAsync to update player state, such as join/leave and ready state.
+    // Note that if called to frequently, this will result in rate limit exceptions.
+    const float k_UpdatePlayersFrequency = 5f;
 
     public static LobbyManager Instance { get; private set; }
 
@@ -66,7 +78,86 @@ public class LobbyManager : MonoBehaviour
 
     async void Update()
     {
-        HandleLobbyHeartbeat();
+        try
+        {
+            if (activeLobby != null && !m_WasGameStarted)
+            {
+                if (isHost && Time.realtimeSinceStartup >= m_NextHostHeartbeatTime)
+                {
+                    await PeriodicHostHeartbeat();
+
+                    // Exit this update now so we'll only ever update 1 item (heartbeat or lobby changes) in 1 Update().
+                    return;
+                }
+
+                if (Time.realtimeSinceStartup >= m_NextUpdatePlayersTime)
+                {
+                    await PeriodicUpdateLobby();
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
+    }
+    async Task PeriodicHostHeartbeat()
+    {
+        try
+        {
+            // Set next heartbeat time before calling Lobby Service since next update could also trigger a
+            // heartbeat which could cause throttling issues.
+            m_NextHostHeartbeatTime = Time.realtimeSinceStartup + k_HostHeartbeatFrequency;
+
+            await LobbyService.Instance.SendHeartbeatPingAsync(activeLobby.Id);
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
+    }
+
+    async Task PeriodicUpdateLobby()
+    {
+        try
+        {
+            // Set next update time before calling Lobby Service since next update could also trigger an
+            // update which could cause throttling issues.
+            m_NextUpdatePlayersTime = Time.realtimeSinceStartup + k_UpdatePlayersFrequency;
+
+            var updatedLobby = await LobbyService.Instance.GetLobbyAsync(activeLobby.Id);
+            if (this == null) return;
+
+            UpdateLobby(updatedLobby);
+        }
+
+        // Handle lobby no longer exists (host canceled game and returned to main menu).
+        catch (LobbyServiceException e) when (e.Reason == LobbyExceptionReason.LobbyNotFound)
+        {
+            if (this == null) return;
+
+            //TODO
+            //ServerlessMultiplayerGameSampleManager.instance.SetReturnToMenuReason(
+            //    ServerlessMultiplayerGameSampleManager.ReturnToMenuReason.LobbyClosed);
+
+            OnPlayerNotInLobby();
+        }
+
+        // Handle player no longer allowed to view lobby (host booted player so player is no longer in the lobby).
+        catch (LobbyServiceException e) when (e.Reason == LobbyExceptionReason.Forbidden)
+        {
+            if (this == null) return;
+
+            //TODO
+            //ServerlessMultiplayerGameSampleManager.instance.SetReturnToMenuReason(
+            //    ServerlessMultiplayerGameSampleManager.ReturnToMenuReason.PlayerKicked);
+
+            OnPlayerNotInLobby();
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
     }
 
     private async void HandleLobbyHeartbeat()
@@ -82,7 +173,9 @@ public class LobbyManager : MonoBehaviour
                     {
                         heartbeatTimer = k_HostHeartbeatFrequency;
                         await LobbyService.Instance.SendHeartbeatPingAsync(activeLobby.Id);
+
                     }
+                        Debug.LogError(activeLobby.Players.Count);
                 }
             }
 
@@ -99,13 +192,13 @@ public class LobbyManager : MonoBehaviour
     private void LobbyCreateTest()
     {
 
-        CreateLobby(MultiplayerManager.Instance._playerData.ChannelName, MultiplayerManager.Instance._playerData.Name, "TestRelayCode");
+        CreateLobby(MultiplayerManager.Instance.PeerData.CommonRoomName, MultiplayerManager.Instance.PeerData.LP.Name, "TestRelayCode");
     }
 
     [ContextMenu("GetPublicLobbiesTest")]
     private void GetPublicLobbiesTest()
     {
-        GetPublicLobbies(MultiplayerManager.Instance._playerData.ChannelName);
+        GetPublicLobbies(MultiplayerManager.Instance.PeerData.CommonRoomName);
     }
     public async Task<Lobby> CreateLobby(string lobbyName, string hostName, string relayJoinCode)
     {
@@ -266,6 +359,48 @@ public class LobbyManager : MonoBehaviour
             Debug.LogException(e);
         }
     }
+
+    void UpdateLobby(Lobby updatedLobby)
+    {
+        // Since this is called after an await, ensure that the Lobby wasn't closed while waiting.
+        if (activeLobby == null || updatedLobby == null) return;
+
+        if (DidPlayersChange(activeLobby.Players, updatedLobby.Players))
+        {
+            activeLobby = updatedLobby;
+            players = activeLobby?.Players;
+
+            if (updatedLobby.Players.Exists(player => player.Id == playerId))
+            {
+               
+                OnLobbyChanged?.Invoke(updatedLobby);
+            }
+            else
+            {
+                
+                OnPlayerNotInLobby();
+            }
+        }
+    }
+
+    static bool DidPlayersChange(List<Player> oldPlayers, List<Player> newPlayers)
+    {
+        if (oldPlayers.Count != newPlayers.Count)
+        {
+            return true;
+        }
+
+        for (int i = 0; i < newPlayers.Count; i++)
+        {
+            if (oldPlayers[i].Id != newPlayers[i].Id ||
+                oldPlayers[i].Data[k_IsReadyKey].Value != newPlayers[i].Data[k_IsReadyKey].Value)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
     public async Task RemovePlayer(string playerId)
     {
         try
@@ -288,6 +423,7 @@ public class LobbyManager : MonoBehaviour
 
             //TODO:
             OnPlayerNotInLobbyEvent?.Invoke();
+            Debug.LogWarning($"This player is no longer in the lobby so returning to main menu.");
         }
     }
     Player CreatePlayerData()
