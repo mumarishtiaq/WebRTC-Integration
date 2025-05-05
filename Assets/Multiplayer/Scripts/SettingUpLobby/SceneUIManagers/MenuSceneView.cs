@@ -10,12 +10,7 @@ public class MenuSceneView : SceneViewBase
     [SerializeField] private GameObject _waitingForOtherPlayerObj;
     [SerializeField] private GameObject _waitingForOtherPlayerAnimation;
 
-    [Header("Remote Player Data Holder")]
-    [SerializeField]
-    GameObject remotePayerDataHolder;
-
-    [SerializeField]
-    TextMeshProUGUI remotePlayerNameText;
+    
 
 
     public Button JoinBtn { get => _joinBtn; }
@@ -35,9 +30,5 @@ public class MenuSceneView : SceneViewBase
         Debug.Log("In WaitingForOtherPlayer");
     }
 
-    public void SetRemotePlayerName(string playerName)
-    {
-        remotePayerDataHolder.SetActive(true);
-        remotePlayerNameText.text = $"{playerName}";
-    }
+    
 }

@@ -11,7 +11,6 @@ public class MultiplayerManager : MonoBehaviour
 
     public PeerData PeerData;
 
-    [SerializeField] private SpawnManager _spawnManager;
     [SerializeField] private MenuSceneManager _menuSceneManager;
 
     public bool isInitialized { get; private set; }
@@ -27,11 +26,6 @@ public class MultiplayerManager : MonoBehaviour
         {
             Instance = this;
         }
-
-
-        if(!_spawnManager)
-            _spawnManager = GetComponent<SpawnManager>();
-
     }
     async void Start()
     {
@@ -78,7 +72,7 @@ public class MultiplayerManager : MonoBehaviour
             isInitialized = true;
 
             _menuSceneManager.ActivateMainMenuUI(PeerData.LP.Name);
-            _spawnManager.SpawnPlayer(PeerData.LP.Gender);
+            SpawnManager.Instance.SpawnPlayer(PeerData.LP.Gender);
             LoadingManager.Instance.DisableLoading();
         }
         catch (Exception e)

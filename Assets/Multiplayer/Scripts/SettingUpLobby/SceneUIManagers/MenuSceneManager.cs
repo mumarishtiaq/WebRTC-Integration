@@ -22,7 +22,7 @@ public class MenuSceneManager : MonoBehaviour
 
     private void Start()
     {
-        _sceneView.JoinBtn.onClick.AddListener(OnJoinRoomTest);
+        _sceneView.JoinBtn.onClick.AddListener(OnJoinRoom);
         LobbyManager.OnLobbyChanged += OnLobbyChanged;
     }
 
@@ -37,39 +37,8 @@ public class MenuSceneManager : MonoBehaviour
         _sceneView.SetInteractable(false);
     }
 
+    
     private async void OnJoinRoom()
-    {
-        try
-        {
-            // used for setting interactions off TODO
-            _sceneView.SetInteractable(false);
-            var playerData = _peerData.LP;
-
-            //checking if the lobby is already created or not 
-            LoadingManager.Instance.EnableLoading("Fetching Room Details");
-
-            (_,List<Lobby> lobbies)  = await DoLobbyExist();
-
-            LoadingManager.Instance.EnableLoading("Joining Room");
-
-            //this means lobby is not created and this will be the host
-            if (lobbies.Count == 0)
-            {
-                await JoinAsHost(playerData,_peerData.CommonRoomName);
-            }
-            //this means lobby is already created now this will be client
-            else
-            {
-                await JoinAsClient(playerData, lobbies[0]);
-            }
-        }
-        catch (Exception e)
-        {
-            Debug.LogException(e);
-        }
-    }
-
-    private async void OnJoinRoomTest()
     {
         try
         {
@@ -98,9 +67,11 @@ public class MenuSceneManager : MonoBehaviour
                 //this means lobby is already created by host
                 if(DoExist)
                 {
+                    LoadingManager.Instance.EnableLoading("Joining Room");
                     await JoinAsClient(playerData, lobbies[0]);
-                    LoadingManager.Instance.EnableLoading("Room Joined", true);
                     _sceneView.SetInteractable(true);
+                    LoadLobbyScene();
+
                 }
                 else
                 {
@@ -190,14 +161,18 @@ public class MenuSceneManager : MonoBehaviour
         {
             //OnHostLobbyChanged(updatedLobby, isGameReady);
             Debug.LogError("Update Lobby on host side");
-            _sceneView.SetRemotePlayerName(_peerData.RP.Name);
+            //_sceneView.SetRemotePlayerName(_peerData.RP.Name);
             _sceneView.SetInteractable(true);
             _sceneView.WaitingForOtherPlayer(false);
 
+            LoadLobbyScene();
+
         }
+      
     }
     private async Task LoadLobbyScene()
     {
+        LoadingManager.Instance.EnableLoading("Joining room");
         await SceneManager.LoadSceneAsync("LobbyScene");
         LoadingManager.Instance.EnableLoading("Room Joined", true);
     }
