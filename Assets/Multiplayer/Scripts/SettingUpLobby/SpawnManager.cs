@@ -1,8 +1,6 @@
-using NUnit.Framework;
 using System.Collections.Generic;
-using Unity.Netcode;
+using System.Linq;
 using UnityEngine;
-using static TicTacToe.GameManager;
 
 public class SpawnManager : MonoBehaviour
 {
@@ -15,15 +13,15 @@ public class SpawnManager : MonoBehaviour
 
 
     [Header("Male And Female Spawn Positions")]
-    [SerializeField] private Transform _hostSpawnPos;
-    [SerializeField] private Transform _clientSpawnPos;
+    [SerializeField] private Transform _localPlayerReferenceTransform;
+    [SerializeField] private Transform _remotePlayerReferenceTransform;
 
     [HideInInspector]
     public int AvatarIndex = 0;
 
-    bool isHost => LobbyManager.Instance.isHost;
+   
 
-    private PeerData _peerData => MultiplayerManager.Instance.PeerData;
+   
 
     [SerializeField] private GameObject _localPlayerAvatar;
     [SerializeField] private GameObject _remotePlayerAvatar;
@@ -46,28 +44,58 @@ public class SpawnManager : MonoBehaviour
         }
     }
 
-    public void SpawnLocalPlayer(PlayerGender playerType)
+    public void SpawnLocalPlayer(PlayerGender gender)
     {
         if (!_avatars) return;
 
-        var character = SpawnPlayer(AvatarIndex, playerType);
+        var character = SpawnPlayer(AvatarIndex, gender);
         _localPlayerAvatar = character;
-        DontDestroyOnLoad(character);
-    } 
-    
-    public void SpawnRemotePlayer(int avatarIndex , PlayerGender playerType)
-    {
-        if (!_avatars) return;
-
-        var character = SpawnPlayer(avatarIndex, playerType);
-        _remotePlayerAvatar = character;
     }
 
-    private GameObject SpawnPlayer(int avatarIndex, PlayerGender playerType)
+    public void SetTransform_LocalPlayer()
     {
-        var prefab = playerType == PlayerGender.Male ? _avatars.MalePrefabs[avatarIndex] : _avatars.FemalePrefabs[avatarIndex];
+        SetTransform(_localPlayerAvatar, GetTargetTransform(true));
+    }
+    
+    public void SpawnRemotePlayer(int avatarIndex , PlayerGender gender)
+    {
+        if (!_avatars) return;
 
-        return Instantiate(prefab);
+        var character = SpawnPlayer(avatarIndex, gender);
+        _remotePlayerAvatar = character;
+
+        SetTransform(_remotePlayerAvatar, GetTargetTransform(false));
+    }
+
+    private GameObject SpawnPlayer(int avatarIndex, PlayerGender gender)
+    {
+        var prefab = gender == PlayerGender.Male ? _avatars.MalePrefabs[avatarIndex] : _avatars.FemalePrefabs[avatarIndex];
+
+        var avatar = Instantiate(prefab);
+        DontDestroyOnLoad(avatar);
+        return avatar;
+
+    }
+
+    private void SetTransform(GameObject player,Transform p_transform)
+    {
+        if(player == null || p_transform == null) return;
+
+        player.transform.position = p_transform.position;
+        player.transform.rotation = p_transform.rotation;
+        player.transform.localScale = p_transform.localScale;
+    }
+
+    private Transform GetTargetTransform(bool isLocal)
+    {
+        var targetTransforms = GameObject.FindGameObjectsWithTag("TargetTransform");
+
+        string key = isLocal ? "local" : "remote";
+
+        //return targetTransforms.FirstOrDefault(obj => obj.name.ToLower() == key).transform;
+        var aa =targetTransforms.FirstOrDefault(obj => obj.name.ToLower().Contains(key)).transform;
+        Debug.Log(aa.name, aa.gameObject);
+        return aa;
     }
 
 

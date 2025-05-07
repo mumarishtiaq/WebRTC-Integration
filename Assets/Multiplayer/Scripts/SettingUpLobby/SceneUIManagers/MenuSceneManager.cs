@@ -42,7 +42,7 @@ public class MenuSceneManager : MonoBehaviour
     {
         try
         {
-            // used for setting interactions off TODO
+            // used for setting interactions off
             _sceneView.SetInteractable(false);
             var playerData = _peerData.LP;
 
@@ -166,7 +166,6 @@ public class MenuSceneManager : MonoBehaviour
             _sceneView.WaitingForOtherPlayer(false);
 
             LoadLobbyScene();
-
         }
       
     }
@@ -175,6 +174,7 @@ public class MenuSceneManager : MonoBehaviour
         LoadingManager.Instance.EnableLoading("Joining room");
         await SceneManager.LoadSceneAsync("LobbyScene");
         LoadingManager.Instance.EnableLoading("Room Joined", true);
+        //SpawnManager.Instance.SpawnRemotePlayer()
     }
 
     void ShowLobbyNotFoundPopup()

@@ -14,20 +14,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentVersion: 1.00
   subtype: tictactoengofree
-  lastShownTimestamp: 1746551123
+  lastShownTimestamp: 1746642490
   lastUpdateResponse:
     version: 1.00
     versionUrl: https://unitycodemonkey.com
-  checkedLastUpdateTimestamp: 1746555876
+  checkedLastUpdateTimestamp: 1746642490
   lastQOTDResponse:
-    questionId: 177
-    questionText: The Profiler is useful for...
-    answerA: Balancing difficulty
-    answerB: Level Design
-    answerC: Indentifying performance bottlenecks
+    questionId: 178
+    questionText: What is the purpose of using Time.deltaTime?
+    answerA: Random movement
+    answerB: Faster performance
+    answerC: Framerate independence
     answerD: 
     answerE: 
-  lastQotdTimestamp: 1746555876
+  lastQotdTimestamp: 1746642490
   lastDynamicHeaderResponse:
     topImageUrl: https://codemonkeyexternal.blob.core.windows.net/external/Misc/assetStoreSpringSale25_EndsSoon.png
     topText: Spring Sale on the Asset Store, browse the Daily FLASH DEALS list to
@@ -35,11 +35,11 @@ MonoBehaviour:
     topLink: unityassetstore
     bottomText: My 10+ Years of C# Knowledge in 1 Course!
     bottomLink: csharpcourse
-  lastDynamicHeaderTimestamp: 1746555876
+  lastDynamicHeaderTimestamp: 1746642490
   websiteLatestMessage:
     text: <a href="https://cmonkey.co/freecourses">Check out all my FREE courses!
       Click here!</a>
-  websiteLatestMessageTimestamp: 1746555876
+  websiteLatestMessageTimestamp: 1746642490
   websiteLatestVideos:
     videos:
     - youTubeId: bl9pc7xaH9Q
@@ -50,4 +50,4 @@ MonoBehaviour:
       title: The ONE Asset you MUST HAVE!
     - youTubeId: YS6Jhj0nqgc
       title: Do Gamers recognize Asset Packs?
-  websiteLatestVideosTimestamp: 1746555876
+  websiteLatestVideosTimestamp: 1746642490

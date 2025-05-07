@@ -163,34 +163,6 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    private async void HandleLobbyHeartbeat()
-    {
-        try
-        {
-            if (activeLobby != null)
-            {
-                if (isHost)
-                {
-                    heartbeatTimer -= Time.deltaTime;
-                    if (heartbeatTimer < 0f)
-                    {
-                        heartbeatTimer = k_HostHeartbeatFrequency;
-                        await LobbyService.Instance.SendHeartbeatPingAsync(activeLobby.Id);
-
-                    }
-                        Debug.LogError(activeLobby.Players.Count);
-                }
-            }
-
-
-        }
-        catch (Exception e)
-        {
-            Debug.LogException(e);
-        }
-    }
-
-
     [ContextMenu("Create Lobby")]
     private void LobbyCreateTest()
     {
@@ -368,15 +340,17 @@ public class LobbyManager : MonoBehaviour
         // Since this is called after an await, ensure that the Lobby wasn't closed while waiting.
         if (activeLobby == null || updatedLobby == null) return;
 
+        Test(updatedLobby);
         if (DidPlayersChange(activeLobby.Players, updatedLobby.Players))
         {
             activeLobby = updatedLobby;
             players = activeLobby?.Players;
-
             if (updatedLobby.Players.Exists(player => player.Id == playerId))
             {
                
                 OnLobbyChanged?.Invoke(updatedLobby);
+
+                
             }
             else
             {
@@ -384,6 +358,29 @@ public class LobbyManager : MonoBehaviour
                 OnPlayerNotInLobby();
             }
         }
+    }
+
+    public void Test(Lobby updatedLobby)
+    {
+        Debug.Log($"Player count : {updatedLobby.Players.Count}");
+        foreach (var player in updatedLobby.Players)
+        {
+            Debug.Log($"Id : {player.Id} ," /*+ $"Name : {player.Profile.Name} " */+ $"Avatar Index : {player.Data[k_PlayerAvatarIndex].Value}");
+
+        }
+    }
+
+    public int GetRemotePlayerAvatarIndex()
+    {
+        if (activeLobby == null) return 0;
+        foreach (var player in activeLobby.Players)
+        {
+            if (player.Id != playerId)
+            {
+                return Convert.ToInt32(player.Data[k_PlayerAvatarIndex].Value);
+            }
+        }
+        return 0;
     }
 
     static bool DidPlayersChange(List<Player> oldPlayers, List<Player> newPlayers)
@@ -444,7 +441,7 @@ public class LobbyManager : MonoBehaviour
                 { k_PlayerNameKey,  new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, m_PlayerName) },
                 { k_IsReadyKey,  new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, m_IsPlayerReady.ToString()) },
             
-            { k_PlayerAvatarIndex,  new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, SpawnManager.Instance.AvatarIndex.ToString()) },
+            { k_PlayerAvatarIndex,  new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, SpawnManager.Instance.AvatarIndex.ToString()) }
             };
 
         return playerDictionary;
