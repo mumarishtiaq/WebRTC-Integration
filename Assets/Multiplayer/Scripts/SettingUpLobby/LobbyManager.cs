@@ -16,6 +16,9 @@ public class LobbyManager : MonoBehaviour
 
     // Lobby data key used to check if each player has clicked the [Ready] button.
     public const string k_IsReadyKey = "isReady";
+    
+    // Lobby data key used to get each player selected avatar index, will used to fetch remote player's selected avatar index.
+    public const string k_PlayerAvatarIndex = "playerAvatarIndex";
 
     public bool isHost { get; private set; }
 
@@ -440,6 +443,8 @@ public class LobbyManager : MonoBehaviour
             {
                 { k_PlayerNameKey,  new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, m_PlayerName) },
                 { k_IsReadyKey,  new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, m_IsPlayerReady.ToString()) },
+            
+            { k_PlayerAvatarIndex,  new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, SpawnManager.Instance.AvatarIndex.ToString()) },
             };
 
         return playerDictionary;

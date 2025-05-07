@@ -72,7 +72,7 @@ public class MultiplayerManager : MonoBehaviour
             isInitialized = true;
 
             _menuSceneManager.ActivateMainMenuUI(PeerData.LP.Name);
-            SpawnManager.Instance.SpawnPlayer(PeerData.LP.Gender);
+            SpawnManager.Instance.SpawnLocalPlayer(PeerData.LP.Gender);
             LoadingManager.Instance.DisableLoading();
         }
         catch (Exception e)

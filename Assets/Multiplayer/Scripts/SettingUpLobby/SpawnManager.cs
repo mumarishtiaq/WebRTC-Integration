@@ -4,7 +4,7 @@ using Unity.Netcode;
 using UnityEngine;
 using static TicTacToe.GameManager;
 
-public class SpawnManager : NetworkBehaviour
+public class SpawnManager : MonoBehaviour
 {
     public static SpawnManager Instance;
    
@@ -19,12 +19,14 @@ public class SpawnManager : NetworkBehaviour
     [SerializeField] private Transform _clientSpawnPos;
 
     [HideInInspector]
-    public int avatarIndex = 0;
+    public int AvatarIndex = 0;
 
     bool isHost => LobbyManager.Instance.isHost;
 
     private PeerData _peerData => MultiplayerManager.Instance.PeerData;
 
+    [SerializeField] private GameObject _localPlayerAvatar;
+    [SerializeField] private GameObject _remotePlayerAvatar;
 
     public List<GameObject> MaleNetworkAvatars;
     public List<GameObject> FemaleNetworkAvatars;
@@ -44,40 +46,35 @@ public class SpawnManager : NetworkBehaviour
         }
     }
 
-    private void Start()
-    {
-        DontDestroyOnLoad(gameObject);
-    }
-
-
-    public void SpawnPlayer(PlayerGender playerType)
+    public void SpawnLocalPlayer(PlayerGender playerType)
     {
         if (!_avatars) return;
 
+        var character = SpawnPlayer(AvatarIndex, playerType);
+        _localPlayerAvatar = character;
+        DontDestroyOnLoad(character);
+    } 
+    
+    public void SpawnRemotePlayer(int avatarIndex , PlayerGender playerType)
+    {
+        if (!_avatars) return;
+
+        var character = SpawnPlayer(avatarIndex, playerType);
+        _remotePlayerAvatar = character;
+    }
+
+    private GameObject SpawnPlayer(int avatarIndex, PlayerGender playerType)
+    {
         var prefab = playerType == PlayerGender.Male ? _avatars.MalePrefabs[avatarIndex] : _avatars.FemalePrefabs[avatarIndex];
 
-        GameObject character = Instantiate(prefab);
-
-
+        return Instantiate(prefab);
     }
 
-    [Rpc(SendTo.Server)]
-    public void SpawnPlayersRpc()
-    {
-        if (!_avatars) return;
 
-        var prefab = _peerData.LP.Gender == PlayerGender.Male ? MaleNetworkAvatars[avatarIndex] : FemaleNetworkAvatars[avatarIndex];
 
-        GameObject character = Instantiate(prefab);
+    
 
-        Debug.LogError(isHost ? "is host" : "isclient");
-
-        var netObj = character.GetComponent<NetworkObject>();
-        if (netObj != null)
-        {
-            netObj.Spawn(true);
-        }
-    }
+    
 
     void OnDestroy()
     {

@@ -10,7 +10,7 @@ public class LobbySceneManager : MonoBehaviour
         _sceneView.SetPlayerData(_peerData.LP.Name);
         _sceneView.SetRemotePlayerData(_peerData.RP.Name);
 
-        SpawnManager.Instance.SpawnPlayersRpc();
+
 
     }
 }
