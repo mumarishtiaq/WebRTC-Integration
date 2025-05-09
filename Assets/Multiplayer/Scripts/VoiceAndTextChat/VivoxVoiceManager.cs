@@ -1,15 +1,19 @@
 using System;
+using System.Threading.Tasks;
+using Unity.Services.Core;
 using Unity.Services.Vivox;
 using UnityEngine;
-using static UnityEditor.Progress;
+
 
 public class VivoxVoiceManager : MonoBehaviour
 {
     public static VivoxVoiceManager Instance;
     public bool isInitializeAndLoggedIn { get; private set; }
 
+    public static Action OnConnecting;
 
-    private void Awake()
+
+    private async void Awake()
     {
         if (Instance != null && Instance != this)
         {
@@ -20,11 +24,16 @@ public class VivoxVoiceManager : MonoBehaviour
             Instance = this;
         }
     }
+    
+    
 
-    public async void InitializeAndSignInVivox(string playerName)
+
+
+    public async Task InitializeAndSignInVivox(string playerName)
     {
         try
         {
+            OnConnecting?.Invoke();
             await VivoxService.Instance.InitializeAsync();
             var options = new LoginOptions
             {
@@ -42,9 +51,9 @@ public class VivoxVoiceManager : MonoBehaviour
         }
     }
 
-    public async void JoinVoiceChannel(string commonRoomName)
+    public async Task JoinVoiceChannel(string commonRoomName)
     {
-        if(isInitializeAndLoggedIn)
+        if (isInitializeAndLoggedIn)
             await VivoxService.Instance.JoinGroupChannelAsync(commonRoomName, ChatCapability.TextAndAudio);
 
         else
@@ -64,11 +73,23 @@ public class VivoxVoiceManager : MonoBehaviour
 
 
     void OnDestroy()
+    {
+        if (Instance == this)
         {
-            if (Instance == this)
-            {
-                Instance = null;
-            }
+            Instance = null;
         }
 
+
     }
+}
+public enum VoiceStatus 
+{ 
+    Connected,
+    Connecting,
+    DisConnected 
+}
+public enum ParticipantType 
+{ 
+   Local,
+   Remote
+}
