@@ -69,6 +69,8 @@ public class MultiplayerManager : MonoBehaviour
             // Check that scene has not been unloaded while processing async wait to prevent throw.
             if (this == null) return;
 
+            //Initialize and sign in to vivox service
+            await VivoxVoiceManager.Instance.InitializeAndSignInVivox(PeerData.LP.Name);
             isInitialized = true;
 
             _menuSceneManager.ActivateMainMenuUI(PeerData.LP.Name);

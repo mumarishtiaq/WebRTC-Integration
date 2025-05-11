@@ -1588,6 +1588,7 @@ GameObject:
   - component: {fileID: 975523780}
   - component: {fileID: 975523779}
   - component: {fileID: 975523785}
+  - component: {fileID: 975523787}
   m_Layer: 0
   m_Name: -------MultiplayerManager-------
   m_TagString: Untagged
@@ -1751,6 +1752,18 @@ MonoBehaviour:
   FemaleNetworkAvatars:
   - {fileID: 933791876930733037, guid: f1cc0399a16f26f40bc188e42b32e740, type: 3}
   - {fileID: 6813150711629759503, guid: f237e1f13a588b644a0fb99bc4c7f42e, type: 3}
+--- !u!114 &975523787
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 975523778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c0dfd8a6850bc24a8b4a0fef9de813a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1000220126
 GameObject:
   m_ObjectHideFlags: 0
@@ -2425,7 +2438,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 43.15
+  m_fontSize: 43.1
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1

@@ -5,9 +5,9 @@ using UnityEngine;
 public class SpawnManager : MonoBehaviour
 {
     public static SpawnManager Instance;
-   
 
-   
+
+
     [Header("Avatars Data")]
     [SerializeField] private AvatarsData _avatars;
 
@@ -19,15 +19,16 @@ public class SpawnManager : MonoBehaviour
     [HideInInspector]
     public int AvatarIndex = 0;
 
-   
 
-   
 
-    [SerializeField] private GameObject _localPlayerAvatar;
-    [SerializeField] private GameObject _remotePlayerAvatar;
+
+
+   public PlayerAnimationController LocalPlayerAvatar;
+   public PlayerAnimationController RemotePlayerAvatar;
 
     public List<GameObject> MaleNetworkAvatars;
     public List<GameObject> FemaleNetworkAvatars;
+
 
 
 
@@ -49,12 +50,13 @@ public class SpawnManager : MonoBehaviour
         if (!_avatars) return;
 
         var character = SpawnPlayer(AvatarIndex, gender);
-        _localPlayerAvatar = character;
+
+        LocalPlayerAvatar = character.GetComponent<PlayerAnimationController>();
     }
 
     public void SetTransform_LocalPlayer()
     {
-        SetTransform(_localPlayerAvatar, GetTargetTransform(true));
+        SetTransform(LocalPlayerAvatar.gameObject, GetTargetTransform(true));
     }
     
     public void SpawnRemotePlayer(int avatarIndex , PlayerGender gender)
@@ -62,9 +64,9 @@ public class SpawnManager : MonoBehaviour
         if (!_avatars) return;
 
         var character = SpawnPlayer(avatarIndex, gender);
-        _remotePlayerAvatar = character;
+        RemotePlayerAvatar = character.GetComponent<PlayerAnimationController>();
 
-        SetTransform(_remotePlayerAvatar, GetTargetTransform(false));
+        SetTransform(RemotePlayerAvatar.gameObject, GetTargetTransform(false));
     }
 
     private GameObject SpawnPlayer(int avatarIndex, PlayerGender gender)
@@ -93,9 +95,8 @@ public class SpawnManager : MonoBehaviour
         string key = isLocal ? "local" : "remote";
 
         //return targetTransforms.FirstOrDefault(obj => obj.name.ToLower() == key).transform;
-        var aa =targetTransforms.FirstOrDefault(obj => obj.name.ToLower().Contains(key)).transform;
-        Debug.Log(aa.name, aa.gameObject);
-        return aa;
+        return targetTransforms.FirstOrDefault(obj => obj.name.ToLower().Contains(key)).transform;
+        
     }
 
 

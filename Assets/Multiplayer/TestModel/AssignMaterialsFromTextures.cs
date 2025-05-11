@@ -7,6 +7,8 @@ using System.Text.RegularExpressions;
 
 public class MaterialAssigner : MonoBehaviour
 {
+
+    #if UNITY_EDITOR
     public string textureFolder = "Assets/Multiplayer/TestModel/Textures";
     public string materialFolder = "Assets/Multiplayer/TestModel/Materials";
 
@@ -117,4 +119,6 @@ public class MaterialAssigner : MonoBehaviour
 
         return CleanName(input);
     }
+
+#endif
 }

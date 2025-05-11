@@ -3155,6 +3155,7 @@ GameObject:
   - component: {fileID: 8954032272982240614}
   - component: {fileID: 6711606668175444259}
   - component: {fileID: 7241059814722911805}
+  - component: {fileID: 4594141722219482094}
   m_Layer: 0
   m_Name: Female_1
   m_TagString: Untagged
@@ -3227,6 +3228,20 @@ MonoBehaviour:
     BodyType: 1
     OutfitGender: 2
     SkinTone: '#dc9274'
+--- !u!114 &4594141722219482094
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6813150711629759503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6a58fcd684da24409897d9d173e9b5d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Animator: {fileID: 6711606668175444259}
+  HeadMesh: {fileID: 8124367724278300776}
 --- !u!1 &6887122185680372565
 GameObject:
   m_ObjectHideFlags: 0

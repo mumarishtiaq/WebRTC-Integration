@@ -15,6 +15,13 @@ public class VoiceSceneView : MonoBehaviour
     [SerializeField] private Color _connectedColor;
     [SerializeField] private Color _disConnectedColor;
 
+    [Header("AudioToggle Sprites")]
+    [SerializeField] private Sprite _audioEnabledSprite;
+    [SerializeField] private Sprite _audioDisabledSprite;
+
+    [Header("AudioToggle Image")]
+    [SerializeField] private Image _audioToggleImg;
+
 
 
     [Serializable]
@@ -24,13 +31,13 @@ public class VoiceSceneView : MonoBehaviour
         public TextMeshProUGUI StatusTxt;
     }
 
-    
 
 
-    //private void Start()
-    //{
-    //    VivoxVoiceManager.OnVoiceStatusChanged += SetLocalPlayerVoiceStatus;
-    //}
+
+    private void Start()
+    {
+        AudioToggleActiveState(false);
+    }
 
 
     public void SetParticipantVoiceStatus(ParticipantType type,VoiceStatus status)
@@ -70,6 +77,18 @@ public class VoiceSceneView : MonoBehaviour
         voiceGUI.StatusIcon.color = color;
         voiceGUI.StatusTxt.color = color;
 
+    }
+
+    public void OnToggleSpriteSwap(bool isMuted) 
+    {
+        var sprite = isMuted ? _audioDisabledSprite : _audioEnabledSprite;
+        _audioToggleImg.sprite = sprite;
+
+    }
+
+    public void AudioToggleActiveState(bool state)
+    {
+        _audioToggleImg.transform.parent.gameObject.SetActive(state);
     }
 
 

@@ -2611,6 +2611,7 @@ GameObject:
   - component: {fileID: 9087301237725416376}
   - component: {fileID: 6201305033126987113}
   - component: {fileID: 4739128649108000110}
+  - component: {fileID: -3497504221677687966}
   m_Layer: 0
   m_Name: Male_1
   m_TagString: Untagged
@@ -2682,6 +2683,20 @@ MonoBehaviour:
     BodyType: 1
     OutfitGender: 1
     SkinTone: '#a44c2c'
+--- !u!114 &-3497504221677687966
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7124318727444452321}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6a58fcd684da24409897d9d173e9b5d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Animator: {fileID: 6201305033126987113}
+  HeadMesh: {fileID: 2734347544476530618}
 --- !u!1 &7190131521019915099
 GameObject:
   m_ObjectHideFlags: 0
