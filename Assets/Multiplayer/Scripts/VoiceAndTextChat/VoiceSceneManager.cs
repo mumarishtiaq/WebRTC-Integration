@@ -131,6 +131,8 @@ public class VoiceSceneManager : MonoBehaviour
             _localParticipant = participant;
             _sceneView.OnToggleSpriteSwap(_localParticipant.IsMuted);
             _sceneView.AudioToggleActiveState(true);
+            SpawnManager.Instance.SetupLipSyncComponents(ParticipantType.Local);
+
         }
     }
 
@@ -138,7 +140,9 @@ public class VoiceSceneManager : MonoBehaviour
     {
         participant.DestroyVivoxParticipantTap();
         _partipantAudioTap = participant.CreateVivoxParticipantTap();
-        SetupLipSyncComponents(_partipantAudioTap, SpawnManager.Instance.RemotePlayerAvatar.HeadMesh);
+
+        SpawnManager.Instance.SetupLipSyncComponents(ParticipantType.Remote, _partipantAudioTap);
+        //SetupLipSyncComponents(_partipantAudioTap, SpawnManager.Instance.RemotePlayerAvatar.HeadMesh);
 
     }
 
@@ -192,12 +196,12 @@ public class VoiceSceneManager : MonoBehaviour
         {
             //getting and setting up audio source
            var src= audioTapObj.GetComponent<AudioSource>();
-            src.playOnAwake = true;
-            src.loop = true;
-            src.mute = false;
-            src.spatialBlend = 0f;
-            if (!src.isPlaying)
-                src.Play();
+            //src.playOnAwake = true;
+            //src.loop = true;
+            //src.mute = false;
+            //src.spatialBlend = 0f;
+            //if (!src.isPlaying)
+            //    src.Play();
 
 
             var lipSync = audioTapObj.AddComponent<OVRLipSyncContext>();

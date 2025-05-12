@@ -75,6 +75,7 @@ public class MultiplayerManager : MonoBehaviour
 
             _menuSceneManager.ActivateMainMenuUI(PeerData.LP.Name);
             SpawnManager.Instance.SpawnLocalPlayer(PeerData.LP.Gender);
+            //SpawnManager.Instance.TriggerAnimations(ParticipantType.Local,AnimationType.Idle);
             LoadingManager.Instance.DisableLoading();
         }
         catch (Exception e)

@@ -13,6 +13,8 @@ public class LobbySceneManager : MonoBehaviour
 
         SpawnManager.Instance.SpawnRemotePlayer(LobbyManager.Instance.GetRemotePlayerAvatarIndex(), _peerData.RP.Gender);
         SpawnManager.Instance.SetTransform_LocalPlayer();
+        SpawnManager.Instance.TriggerAnimations(ParticipantType.Remote, AnimationType.Sit);
+        SpawnManager.Instance.TriggerAnimations(ParticipantType.Local, AnimationType.Sit);
 
 
 

@@ -32,5 +32,8 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Multiplayer/Scenes/VoiceChatScene.unity
     guid: 78d6ec0bf86247f43820f7ddc9200241
+  - enabled: 0
+    path: Assets/Multiplayer/Scenes/ModelAndAnimationTestScene.unity
+    guid: b710f7606f9d36144ab4d990adba1704
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

@@ -25,7 +25,7 @@ public class LoadingManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    public void EnableLoading(string msg = "Loading ...",bool isDisableAfterInterval = false,float interval = 2f)
+    public void EnableLoading(string msg = "Loading ...",bool isDisableAfterInterval = false,float interval = 1f)
     {
         _animationObj.SetActive(true);
         _loadingMsg.text = msg;

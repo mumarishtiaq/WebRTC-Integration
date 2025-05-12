@@ -1,3 +1,4 @@
+using GLTFast.Schema;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -26,9 +27,7 @@ public class SpawnManager : MonoBehaviour
    public PlayerAnimationController LocalPlayerAvatar;
    public PlayerAnimationController RemotePlayerAvatar;
 
-    public List<GameObject> MaleNetworkAvatars;
-    public List<GameObject> FemaleNetworkAvatars;
-
+   
 
 
 
@@ -99,11 +98,47 @@ public class SpawnManager : MonoBehaviour
         
     }
 
+    public void SetupLipSyncComponents(ParticipantType pType, GameObject obj = null)
+    {
+        SkinnedMeshRenderer rend = pType == ParticipantType.Local ? LocalPlayerAvatar.HeadMesh : RemotePlayerAvatar.HeadMesh;
+        bool loopback = pType == ParticipantType.Local ? false : true;
 
+        if (obj != null)
+        {
+            var lipSync = obj.AddComponent<OVRLipSyncContext>();
 
-    
+            //getting and setting up audio source
+            var src = obj.GetComponent<AudioSource>();
+          
+            lipSync.audioSource = src;
+            lipSync.audioLoopback = loopback;
 
-    
+            var morph = obj.AddComponent<OVRLipSyncContextMorphTarget>();
+            morph.visemeToBlendTargets = new int[15];
+            for (int i = 0; i < 15; i++)
+            {
+                morph.visemeToBlendTargets[i] = i + 1;
+            }
+            morph.skinnedMeshRenderer = rend;
+        }
+        //if obj is null so we are setting lipSync components for local player
+        else
+        {
+            Debug.Log("Tap Obj is null");
+            GameObject lipSyncHolder = new GameObject("LocalPlayerLipSyncComponents");
+            SetupLipSyncComponents(pType, lipSyncHolder);
+            lipSyncHolder.AddComponent<OVRLipSyncMicInput>();
+            DontDestroyOnLoad(lipSyncHolder);
+        }
+    }
+
+    public void TriggerAnimations(ParticipantType pType , AnimationType animType)
+    {
+        var player = pType == ParticipantType.Local ? LocalPlayerAvatar : RemotePlayerAvatar;
+
+        player.TriggerAnimation(animType);
+
+    }
 
     void OnDestroy()
     {
@@ -114,3 +149,11 @@ public class SpawnManager : MonoBehaviour
     }
 
 }
+
+public enum AnimationType
+{
+    None,
+    Idle,
+    Sit
+}
+
