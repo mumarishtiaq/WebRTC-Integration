@@ -2508,7 +2508,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 43.3
+  m_fontSize: 43.1
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -3220,23 +3220,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &4258259361686061188
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8135417403902095141}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 44e924d08fe778a41ba076717a6cce90, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  circles:
-  - {fileID: 6992624376491078783}
-  - {fileID: 7950401031794557687}
-  - {fileID: 1740689775185201545}
-  minScaleFactor: 0.1
 --- !u!222 &4284535028397296131
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3836,9 +3819,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3651017550599436639}
-  - component: {fileID: 4258259361686061188}
   - component: {fileID: 1491467130364785680}
   - component: {fileID: 8735828836732080066}
+  - component: {fileID: 8735828836732080067}
   m_Layer: 5
   m_Name: Animation
   m_TagString: Untagged
@@ -4005,6 +3988,22 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 3
+--- !u!114 &8735828836732080067
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8135417403902095141}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5384ecbf4891b334189cff86131bf80f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  circles:
+  - {fileID: 6992624376491078783}
+  - {fileID: 7950401031794557687}
+  - {fileID: 1740689775185201545}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
