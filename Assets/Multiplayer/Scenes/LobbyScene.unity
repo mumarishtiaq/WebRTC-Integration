@@ -657,7 +657,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &340077612
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4429,7 +4429,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2015177065}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 7749393323075632213}
+        m_TargetAssemblyTypeName: GamesView, Assembly-CSharp
+        m_MethodName: Open
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &2015177065
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5959,7 +5971,6 @@ GameObject:
   m_Component:
   - component: {fileID: 2594826310383216371}
   - component: {fileID: 7749393323075632213}
-  - component: {fileID: 7749393323075632214}
   m_Layer: 5
   m_Name: GamesPanel
   m_TagString: Untagged
@@ -5979,24 +5990,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2bdae0918dd0eef4f90bfa2d4c1ab004, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  TimerObj: {fileID: 0}
+  TimerImage: {fileID: 0}
+  TimerTxt: {fileID: 0}
   _bg: {fileID: 7045264170382711929}
   _window: {fileID: 7018465110184792188}
   _game1Btm: {fileID: 1437235128}
   _game2Btm: {fileID: 653651884}
   _game3Btm: {fileID: 2109646632}
-  _timer: {fileID: 0}
---- !u!114 &7749393323075632214
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7749393323075632212}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fae28e76a0e66a142865f0101dae4f45, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &7844014761841728898
 GameObject:
   m_ObjectHideFlags: 0

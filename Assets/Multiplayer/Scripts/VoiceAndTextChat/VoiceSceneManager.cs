@@ -24,6 +24,7 @@ public class VoiceSceneManager : MonoBehaviour
 
     private async void Awake()
     {
+        
        await VivoxVoiceManager.Instance.JoinVoiceChannel(_peerData.CommonRoomName);
 
 
@@ -63,9 +64,17 @@ public class VoiceSceneManager : MonoBehaviour
 
             VivoxVoiceManager.OnConnecting = () => SetConnecting();
 
-            SetConnecting(ParticipantType.Local);
-            SetConnecting(ParticipantType.Remote);
-
+            //if (VivoxService.Instance.ActiveChannels[_peerData.CommonRoomName].Count == 2)
+            //{
+            //    SetConnected(ParticipantType.Local);
+            //    SetConnected(ParticipantType.Remote);
+            //}
+            //else
+            {
+                SetConnecting(ParticipantType.Local);
+                SetConnecting(ParticipantType.Remote);
+            }
+            
         }
         else
         {

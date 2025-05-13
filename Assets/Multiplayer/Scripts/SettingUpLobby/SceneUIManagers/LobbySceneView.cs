@@ -10,12 +10,9 @@ public class LobbySceneView : SceneViewBase
     TextMeshProUGUI remotePlayerNameText;
 
     [SerializeField]
-    GameObject _gamesPanel;
+    GameObject _lobbyPanel;
 
 
-
-
-    
 
     public void SetRemotePlayerData(string playerName)
     {
@@ -23,8 +20,10 @@ public class LobbySceneView : SceneViewBase
         remotePlayerNameText.text = $"{playerName}";
     }
 
-    public void OnGameButtonClicked()
+    public void ShowLobbyPanel(string PlayerId)
     {
 
     }
+
+  
 }

@@ -1,22 +1,27 @@
 using DG.Tweening;
+using System;
+using Unity.Netcode;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.Windows;
 
-public class GamesView : TimerController
+public class GamesView : SceneViewBase
 {
     [Header("References")]
     [SerializeField] private Image _bg;
     [SerializeField] private Transform _window;
 
 
-    private float _openDuration = 0.7f;
-    private float _closeDuration = 0.6f;
+    private float _openDuration = 0.5f;
+    private float _closeDuration = 0.4f;
 
 
-    [Header("Game Buttons")]
-    [SerializeField] private Button _game1Btm;
-    [SerializeField] private Button _game2Btm;
-    [SerializeField] private Button _game3Btm;
+    //[Header("Game Buttons")]
+    //[SerializeField] private Button _game1Btm;
+    //[SerializeField] private Button _game2Btm;
+    //[SerializeField] private Button _game3Btm;
 
     
 
@@ -26,30 +31,13 @@ public class GamesView : TimerController
         ResetToDefault();
     }
 
-    private void OnEnable()
-    {
-        _game1Btm.onClick.RemoveAllListeners();
-        _game2Btm.onClick.RemoveAllListeners();
-        _game3Btm.onClick.RemoveAllListeners();
-
-        _game1Btm.onClick.AddListener(() => OnGamePlayButtonClicked(GameType.Tik_Tak_Toe));
-        _game2Btm.onClick.AddListener(() => OnGamePlayButtonClicked(GameType.Bubble_Shooter));
-        _game3Btm.onClick.AddListener(() => OnGamePlayButtonClicked(GameType.Chess));
-    }
-    private void OnDisable()
-    {
-        _game1Btm.onClick.RemoveAllListeners();
-        _game2Btm.onClick.RemoveAllListeners();
-        _game3Btm.onClick.RemoveAllListeners();
-    }
-
-
     [ContextMenu("Open")]
    public void Open()
     {
         ResetToDefault();
+        _bg.gameObject.SetActive(true);
         Fade(0.64f, _openDuration);
-        Scale(Vector3.one, _openDuration, Ease.InOutBack);
+        Scale(Vector3.one, _openDuration, Ease.OutBack);
     }
 
     [ContextMenu("Close")]
@@ -57,7 +45,7 @@ public class GamesView : TimerController
     {
         DOTween.KillAll();
         Fade(0, _closeDuration);
-        Scale(Vector3.zero, _closeDuration, Ease.InBack);
+        Scale(Vector3.zero, _closeDuration, Ease.InBack,()=>_bg.gameObject.SetActive(false));
     }
 
 
@@ -66,37 +54,22 @@ public class GamesView : TimerController
         _bg.DOFade(endValue, duration);
     }
     
-    private void Scale(Vector3 endValue, float duration = 0,Ease ease = Ease.InBack)
+    private void Scale(Vector3 endValue, float duration = 0,Ease ease = Ease.InBack, TweenCallback onComplete = null)
     {
-        _window.DOScale(endValue, duration).SetEase(ease);
+        _window.DOScale(endValue, duration).SetEase(ease).OnComplete(onComplete);
     }
 
     private void ResetToDefault()
     {
         DOTween.KillAll();
+        _bg.gameObject.SetActive(false);
         Fade();
         Scale(Vector3.zero);
     }
 
-    public void OnGamePlayButtonClicked(GameType gameType)
-    {
-        string readableName = gameType.ToString().Replace("_", " ");
-        Debug.Log("Selected Game Type: " + readableName);
+   
 
-        _timer.StartTimer(10f,
-    onComplete: () => OnTimerComplete(),
-    onProgress: (remaining) => TimerProgress(remaining)
- );
-    }
-
-    private void OnTimerComplete()
-    {
-
-    }
-    private void TimerProgress(float progress)
-    {
-
-    }
+  
 }
 
 public enum GameType

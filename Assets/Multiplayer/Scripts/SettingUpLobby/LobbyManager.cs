@@ -47,6 +47,8 @@ public class LobbyManager : MonoBehaviour
     float m_NextUpdatePlayersTime;
 
     public static event Action<Lobby> OnLobbyChanged;
+    public static event Action OnGameReady;
+    public static event Action<Player> OnPlayerInitiateToPlayGame;
 
 
 
@@ -340,35 +342,95 @@ public class LobbyManager : MonoBehaviour
         // Since this is called after an await, ensure that the Lobby wasn't closed while waiting.
         if (activeLobby == null || updatedLobby == null) return;
 
-        Test(updatedLobby);
+        //Test(updatedLobby);
+        var isGameReady = IsGameReady(updatedLobby);
+        var isPlayerInitiateToPlayGame = IsPlayerInitiateToPlayGame(updatedLobby, out var readyPlayer);
         if (DidPlayersChange(activeLobby.Players, updatedLobby.Players))
         {
             activeLobby = updatedLobby;
             players = activeLobby?.Players;
             if (updatedLobby.Players.Exists(player => player.Id == playerId))
-            {
-               
                 OnLobbyChanged?.Invoke(updatedLobby);
 
-                
+            else
+                OnPlayerNotInLobby();
+        }
+
+        if(isGameReady)
+        {
+            if (updatedLobby.Players.Exists(player => player.Id == playerId))
+            {
+                OnGameReady?.Invoke();
+                return;
             }
             else
             {
-                
                 OnPlayerNotInLobby();
+
             }
         }
+        if(isPlayerInitiateToPlayGame)
+        {
+            if (updatedLobby.Players.Exists(player => player.Id == playerId))
+                OnPlayerInitiateToPlayGame?.Invoke(readyPlayer);
+
+            else
+                OnPlayerNotInLobby();
+        }
+
+
+
     }
 
     public void Test(Lobby updatedLobby)
     {
-        Debug.Log($"Player count : {updatedLobby.Players.Count}");
-        foreach (var player in updatedLobby.Players)
-        {
-            Debug.Log($"Id : {player.Id} ," /*+ $"Name : {player.Profile.Name} " */+ $"Avatar Index : {player.Data[k_PlayerAvatarIndex].Value}");
+        //Debug.Log($"Player count : {updatedLobby.Players.Count}");
+        //foreach (var player in updatedLobby.Players)
+        //{
+        //    Debug.Log($"Id : {player.Id} ," /*+ $"Name : {player.Profile.Name} " */+ $"Avatar Index : {player.Data[k_PlayerAvatarIndex].Value}");
 
-        }
+        //}
     }
+
+    static bool IsGameReady(Lobby lobby)
+    {
+        if (lobby.Players.Count <= 1)
+        {
+            return false;
+        }
+
+        foreach (var player in lobby.Players)
+        {
+            var isReady = bool.Parse(player.Data[k_IsReadyKey].Value);
+            if (!isReady)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    static bool IsPlayerInitiateToPlayGame(Lobby lobby, out Player readyPlayer)
+    {
+        readyPlayer = null;
+
+        if (lobby.Players.Count <= 1)
+            return false;
+
+        foreach (var player in lobby.Players)
+        {
+            if (player.Data.TryGetValue(k_IsReadyKey, out var dataValue) &&
+                dataValue.Value == "true")
+            {
+                readyPlayer = player;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 
     public int GetRemotePlayerAvatarIndex()
     {
@@ -409,6 +471,34 @@ public class LobbyManager : MonoBehaviour
             {
                 await LobbyService.Instance.RemovePlayerAsync(activeLobby.Id, playerId);
             }
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
+    }
+
+    public async Task ToggleReadyState()
+    {
+        try
+        {
+            if (activeLobby == null)
+            {
+                Debug.Log("Attempting to toggle ready state when not already in a lobby.");
+                return;
+            }
+
+            m_IsPlayerReady = !m_IsPlayerReady;
+
+            var lobbyId = activeLobby.Id;
+
+            var options = new UpdatePlayerOptions();
+            options.Data = CreatePlayerDictionary();
+
+            var updatedLobby = await LobbyService.Instance.UpdatePlayerAsync(lobbyId, playerId, options);
+            if (this == null) return;
+
+            UpdateLobby(updatedLobby);
         }
         catch (Exception e)
         {
