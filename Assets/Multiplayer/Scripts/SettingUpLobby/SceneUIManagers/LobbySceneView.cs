@@ -13,9 +13,8 @@ public class LobbySceneView : SceneViewBase
     TextMeshProUGUI remotePlayerNameText;
 
     [SerializeField]
-    LobbyPanelView _lobbyPanelView; 
-    
-    
+    LobbyPanelView _lobbyPanelView;
+
 
 
 
@@ -53,7 +52,7 @@ public class LobbySceneView : SceneViewBase
     }
 
 
-    public void SetLobbyPanelForPlayerWhoReceiveRequesr(string playerID,string readyPlayerName,string requestedGameName)
+    public void SetLobbyPanelForPlayerWhoReceiveRequest(string playerID, string readyPlayerId,string readyPlayerName,string requestedGameName)
     {
         //spawning player icons
         _lobbyPanelView.SpawnPlayerIcons(playerID);
@@ -63,12 +62,18 @@ public class LobbySceneView : SceneViewBase
 
         //set player icon ready state
         _lobbyPanelView.SetReadyState(playerID, false);
+        _lobbyPanelView.SetReadyState(readyPlayerId, true);
 
         _lobbyPanelView.SetButtonsState(false);
 
 
         //opening lobby panel
         _lobbyPanelView.OpenLobbyPanel($"{readyPlayerName} wants to play", requestedGameName);
+    }
+
+    public void SwitchReadyState(string playerId)
+    {
+        _lobbyPanelView.SwitchReadyState(playerId);
     }
 
 

@@ -4,12 +4,15 @@ using Unity.Services.Authentication;
 using Unity.Services.Lobbies.Models;
 using UnityEditor;
 using UnityEngine;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class LobbySceneManager : MonoBehaviour
 {
     [SerializeField] private LobbySceneView _sceneView;
     [SerializeField] private GamesView _gameView;
     private PeerData _peerData => MultiplayerManager.Instance.PeerData;
+
+    private GameType _gameType;
 
     private void Start()
     {
@@ -37,11 +40,12 @@ public class LobbySceneManager : MonoBehaviour
                 string readableGameName = GetReadableGameName(gameName);
                 Debug.Log("Selected Game Type: " + readableGameName);
 
+                _sceneView.SetLobbyPanelForPlayerWhoInitiate(readableGameName, LobbyManager.playerId);
 
+                _gameView.Close();
 
-                _sceneView.SetLobbyPanelForPlayerWhoInitiate(gameName, LobbyManager.playerId);
-
-                await LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame(gameType);
+                LobbyManager.m_playerSelectedGame = gameType;
+                await LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame();
             }
             else
             {
@@ -53,6 +57,31 @@ public class LobbySceneManager : MonoBehaviour
             Debug.LogException(e);
         }
     }
+
+    public async void OnAcceptButtonClicked()
+    {
+        _sceneView.SetInteractable(false);
+        _gameView.Close();
+        LobbyManager.m_playerSelectedGame = _gameType;
+        _sceneView.SwitchReadyState(LobbyManager.playerId);
+        await LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame();
+        //_sceneView.SetInteractable(true);
+
+    }
+    public async void OnRejectButtonClicked()
+    {
+        _sceneView.SetInteractable(false);
+        _gameView.Close();
+
+        _gameType = GameType.None;
+        LobbyManager.m_playerSelectedGame = _gameType;
+        _sceneView.SwitchReadyState(LobbyManager.playerId);
+        await LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame();
+        _sceneView.SetInteractable(true);
+
+    }
+
+
     /// <summary>
     /// This method will invoke if both the players Ready Flag set to true
     /// </summary>
@@ -67,10 +96,18 @@ public class LobbySceneManager : MonoBehaviour
     /// <param name="readyplayer">The player who initiated the game, this includes player details along with the game player wants to play</param>
     private void OnPlayerInitiateToPlayGame(Player readyplayer,string requestedGameName)
     {
-        var readyPlayerName = readyplayer.Data[LobbyManager.k_PlayerNameKey].Value;
-        Debug.Log($"{readyPlayerName} wants to play {requestedGameName}");
+        if (Enum.TryParse<GameType>(requestedGameName, true, out var gameType))
+        {
+            var readyPlayerName = readyplayer.Data[LobbyManager.k_PlayerNameKey].Value;
+            string readableGameName = GetReadableGameName(requestedGameName);
+            Debug.Log($"{readyPlayerName} wants to play {requestedGameName}");
 
-        _sceneView.SetLobbyPanelForPlayerWhoReceiveRequesr(LobbyManager.playerId, readyPlayerName, requestedGameName);
+            _gameType = gameType;
+
+            _sceneView.SetLobbyPanelForPlayerWhoReceiveRequest(LobbyManager.playerId, readyplayer.Id, readyPlayerName, readableGameName);
+
+            _gameView.Close();
+        }
     }
 
     private string GetReadableGameName(string gameName)

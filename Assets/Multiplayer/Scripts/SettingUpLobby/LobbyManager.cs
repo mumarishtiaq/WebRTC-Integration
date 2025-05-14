@@ -43,7 +43,7 @@ public class LobbyManager : MonoBehaviour
 
      bool m_IsPlayerReady = false;
 
-     GameType m_playerSelectedGame  = GameType.None;
+     public static GameType m_playerSelectedGame  = GameType.None;
 
     bool m_WasGameStarted = false;
 
@@ -355,6 +355,7 @@ public class LobbyManager : MonoBehaviour
         TestDebug(updatedLobby);
         if (DidPlayersChange(activeLobby.Players, updatedLobby.Players))
         {
+            Debug.LogError("In didplayerchange");
             activeLobby = updatedLobby;
             players = activeLobby?.Players;
             if (updatedLobby.Players.Exists(player => player.Id == playerId))
@@ -379,7 +380,7 @@ public class LobbyManager : MonoBehaviour
 
             }
         }
-        if(isPlayerInitiateToPlayGame && readyPlayer.Id != playerId)
+        if(isPlayerInitiateToPlayGame && readyPlayer.Id != playerId && m_playerSelectedGame == GameType.None)
         {
 
             activeLobby = updatedLobby;
@@ -506,7 +507,7 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    public async Task ToggleReadyStateAndSetSelectedGame(GameType selectedGame)
+    public async Task ToggleReadyStateAndSetSelectedGame()
     {
         try
         {
@@ -517,7 +518,6 @@ public class LobbyManager : MonoBehaviour
             }
 
             m_IsPlayerReady = !m_IsPlayerReady;
-            m_playerSelectedGame = selectedGame;
 
             var lobbyId = activeLobby.Id;
 

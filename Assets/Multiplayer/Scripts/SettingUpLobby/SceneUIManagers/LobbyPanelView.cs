@@ -42,6 +42,7 @@ public class LobbyPanelView : MonoBehaviour
 
     internal void SpawnPlayerIcons(string playerID)
     {
+        RemoveAllPlayers();
         foreach (Player player in LobbyManager.Instance.players) 
         {
             var playerIcon = GameObject.Instantiate(playerIconPrefab, playersContainer);
@@ -79,12 +80,25 @@ public class LobbyPanelView : MonoBehaviour
         _rejectBtn.gameObject.SetActive(!isInitiator);
         _leaveBtn.gameObject.SetActive(isInitiator);
     }
+    public void SwitchReadyState(string playerID)
+    {
+        var icon = GetPlayerIcon(playerID);
+        if (icon == null) return;
 
-    
-
+        icon.SwitchReadyState();
+    }
 
     private PlayerIconView  GetPlayerIcon(string playerID)
     {
         return _playerIcons.FirstOrDefault(p => p.playerId == playerID);
+    }
+
+    void RemoveAllPlayers()
+    {
+        foreach (var playerIcon in _playerIcons)
+        {
+            Destroy(playerIcon.gameObject);
+        }
+        _playerIcons.Clear();
     }
 }

@@ -26,4 +26,10 @@ public class PlayerIconView : MonoBehaviour
         _readyStateObj.SetActive(isReady);
 
     }
+
+    public void SwitchReadyState()
+    {
+        var isReady = !_checkMarkImage.activeSelf;
+        SetReady(isReady);
+    }
 }
