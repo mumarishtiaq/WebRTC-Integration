@@ -18,7 +18,10 @@ public class LobbyManager : MonoBehaviour
     public const string k_IsReadyKey = "isReady";
     
     // Lobby data key used to get each player selected avatar index, will used to fetch remote player's selected avatar index.
-    public const string k_PlayerAvatarIndex = "playerAvatarIndex";
+    public const string k_PlayerAvatarIndexKey = "playerAvatarIndex";
+
+    // Lobby data key used to get each player selected game , will used to fetch remote player's selected game.
+    public const string k_SelectedGameKey = "playerSelectedGame";
 
     public bool isHost { get; private set; }
 
@@ -38,7 +41,9 @@ public class LobbyManager : MonoBehaviour
 
     string m_PlayerName;
 
-    bool m_IsPlayerReady = false;
+     bool m_IsPlayerReady = false;
+
+     GameType m_playerSelectedGame  = GameType.None;
 
     bool m_WasGameStarted = false;
 
@@ -48,7 +53,7 @@ public class LobbyManager : MonoBehaviour
 
     public static event Action<Lobby> OnLobbyChanged;
     public static event Action OnGameReady;
-    public static event Action<Player> OnPlayerInitiateToPlayGame;
+    public static event Action<Player,string> OnPlayerInitiateToPlayGame;
 
 
 
@@ -58,7 +63,7 @@ public class LobbyManager : MonoBehaviour
 
     // Frequency to call GetLobbyAsync to update player state, such as join/leave and ready state.
     // Note that if called to frequently, this will result in rate limit exceptions.
-    const float k_UpdatePlayersFrequency = 5f;
+    const float k_UpdatePlayersFrequency = 1.5f;
 
     public static LobbyManager Instance { get; private set; }
 
@@ -345,6 +350,9 @@ public class LobbyManager : MonoBehaviour
         //Test(updatedLobby);
         var isGameReady = IsGameReady(updatedLobby);
         var isPlayerInitiateToPlayGame = IsPlayerInitiateToPlayGame(updatedLobby, out var readyPlayer);
+        Debug.Log($"Test isGame Ready {isGameReady}");
+        Debug.Log($"Test isPlayerInitiateToPlayGame {isPlayerInitiateToPlayGame}");
+        TestDebug(updatedLobby);
         if (DidPlayersChange(activeLobby.Players, updatedLobby.Players))
         {
             activeLobby = updatedLobby;
@@ -358,6 +366,8 @@ public class LobbyManager : MonoBehaviour
 
         if(isGameReady)
         {
+            activeLobby = updatedLobby;
+            players = activeLobby?.Players;
             if (updatedLobby.Players.Exists(player => player.Id == playerId))
             {
                 OnGameReady?.Invoke();
@@ -369,10 +379,13 @@ public class LobbyManager : MonoBehaviour
 
             }
         }
-        if(isPlayerInitiateToPlayGame)
+        if(isPlayerInitiateToPlayGame && readyPlayer.Id != playerId)
         {
+
+            activeLobby = updatedLobby;
+            players = activeLobby?.Players;
             if (updatedLobby.Players.Exists(player => player.Id == playerId))
-                OnPlayerInitiateToPlayGame?.Invoke(readyPlayer);
+                OnPlayerInitiateToPlayGame?.Invoke(readyPlayer, GetPlayerSelectedGame(readyPlayer));
 
             else
                 OnPlayerNotInLobby();
@@ -382,14 +395,9 @@ public class LobbyManager : MonoBehaviour
 
     }
 
-    public void Test(Lobby updatedLobby)
+    private string GetPlayerSelectedGame(Player player)
     {
-        //Debug.Log($"Player count : {updatedLobby.Players.Count}");
-        //foreach (var player in updatedLobby.Players)
-        //{
-        //    Debug.Log($"Id : {player.Id} ," /*+ $"Name : {player.Profile.Name} " */+ $"Avatar Index : {player.Data[k_PlayerAvatarIndex].Value}");
-
-        //}
+        return player.Data[k_SelectedGameKey].Value;
     }
 
     static bool IsGameReady(Lobby lobby)
@@ -410,6 +418,21 @@ public class LobbyManager : MonoBehaviour
 
         return true;
     }
+    static void TestDebug(Lobby updatedLobby)
+    {
+        if (updatedLobby.Players.Count <= 1)
+        {
+            return;
+        }
+
+        foreach (var player in updatedLobby.Players)
+        {
+            var isReady = bool.Parse(player.Data[k_IsReadyKey].Value);
+            Debug.Log($"Test Player {player.Id} is Ready = {isReady}");
+            
+        }
+
+    }
 
     static bool IsPlayerInitiateToPlayGame(Lobby lobby, out Player readyPlayer)
     {
@@ -418,15 +441,20 @@ public class LobbyManager : MonoBehaviour
         if (lobby.Players.Count <= 1)
             return false;
 
+
+        Debug.Log("Test in method IsPlayerInitiateToPlayGame()");
         foreach (var player in lobby.Players)
         {
             if (player.Data.TryGetValue(k_IsReadyKey, out var dataValue) &&
-                dataValue.Value == "true")
+                bool.TryParse(dataValue.Value, out bool isReady) &&
+                isReady)
             {
                 readyPlayer = player;
                 return true;
             }
         }
+        return false;
+
 
         return false;
     }
@@ -439,7 +467,7 @@ public class LobbyManager : MonoBehaviour
         {
             if (player.Id != playerId)
             {
-                return Convert.ToInt32(player.Data[k_PlayerAvatarIndex].Value);
+                return Convert.ToInt32(player.Data[k_PlayerAvatarIndexKey].Value);
             }
         }
         return 0;
@@ -478,7 +506,7 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    public async Task ToggleReadyState()
+    public async Task ToggleReadyStateAndSetSelectedGame(GameType selectedGame)
     {
         try
         {
@@ -489,6 +517,7 @@ public class LobbyManager : MonoBehaviour
             }
 
             m_IsPlayerReady = !m_IsPlayerReady;
+            m_playerSelectedGame = selectedGame;
 
             var lobbyId = activeLobby.Id;
 
@@ -531,7 +560,9 @@ public class LobbyManager : MonoBehaviour
                 { k_PlayerNameKey,  new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, m_PlayerName) },
                 { k_IsReadyKey,  new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, m_IsPlayerReady.ToString()) },
             
-            { k_PlayerAvatarIndex,  new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, SpawnManager.Instance.AvatarIndex.ToString()) }
+            { k_PlayerAvatarIndexKey,  new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, SpawnManager.Instance.AvatarIndex.ToString()) },
+            
+            { k_SelectedGameKey,  new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, m_playerSelectedGame.ToString()) }
             };
 
         return playerDictionary;

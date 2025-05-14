@@ -1,5 +1,6 @@
 using DG.Tweening;
 using System;
+using TMPro;
 using Unity.Netcode;
 using UnityEditor;
 using UnityEngine;
@@ -7,7 +8,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Windows;
 
-public class GamesView : SceneViewBase
+public class GamesView : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Image _bg;
@@ -67,9 +68,13 @@ public class GamesView : SceneViewBase
         Scale(Vector3.zero);
     }
 
-   
 
-  
+    
+
+
+
+
+
 }
 
 public enum GameType

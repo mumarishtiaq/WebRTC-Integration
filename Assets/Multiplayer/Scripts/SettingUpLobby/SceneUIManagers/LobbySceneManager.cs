@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Unity.Services.Authentication;
 using Unity.Services.Lobbies.Models;
 using UnityEditor;
@@ -29,21 +30,27 @@ public class LobbySceneManager : MonoBehaviour
 
     public async void OnGamePlayButtonClicked(string gameName)
     {
-        if (Enum.TryParse<GameType>(gameName, true, out var gameType))
+        try
         {
-            Debug.Log($"Parsed GameType: {gameType}");
+            if (Enum.TryParse<GameType>(gameName, true, out var gameType))
+            {
+                string readableGameName = GetReadableGameName(gameName);
+                Debug.Log("Selected Game Type: " + readableGameName);
 
 
-            string readableName = gameName.Replace("_", " ");
-            Debug.Log("Selected Game Type: " + readableName);
 
-            await LobbyManager.Instance.ToggleReadyState();
+                _sceneView.SetLobbyPanelForPlayerWhoInitiate(gameName, LobbyManager.playerId);
 
-            //_sceneView.ShowLobbyPanel(AuthenticationService.Instance.PlayerId);
+                await LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame(gameType);
+            }
+            else
+            {
+                Debug.LogError("Invalid Game Name");
+            }
         }
-        else
+        catch (Exception e)
         {
-            Debug.LogError("Invalid Game Name");
+            Debug.LogException(e);
         }
     }
     /// <summary>
@@ -55,12 +62,20 @@ public class LobbySceneManager : MonoBehaviour
     }
 
     /// <summary>
-    /// This Method will always invoke on the remote side, means the player who is not initiating to play the game
+    /// This Method will always invoke on the remote side, means the player who is not initiating to play the game, this code will run on the player side who is not initiating game
     /// </summary>
-    /// <param name="player">The player who initiated the game, this includes player details along with the game player wants to play</param>
-    private void OnPlayerInitiateToPlayGame(Player player)
+    /// <param name="readyplayer">The player who initiated the game, this includes player details along with the game player wants to play</param>
+    private void OnPlayerInitiateToPlayGame(Player readyplayer,string requestedGameName)
     {
-        Debug.Log($"Player {player.Id} , Name : {player.Profile.Name} want to play a game #GameName");
+        var readyPlayerName = readyplayer.Data[LobbyManager.k_PlayerNameKey].Value;
+        Debug.Log($"{readyPlayerName} wants to play {requestedGameName}");
+
+        _sceneView.SetLobbyPanelForPlayerWhoReceiveRequesr(LobbyManager.playerId, readyPlayerName, requestedGameName);
+    }
+
+    private string GetReadableGameName(string gameName)
+    {
+        return gameName.Replace("_", " ");
     }
 
     private void OnDestroy()
