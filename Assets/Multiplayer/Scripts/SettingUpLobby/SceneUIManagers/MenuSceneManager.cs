@@ -24,6 +24,7 @@ public class MenuSceneManager : MonoBehaviour
     {
         _sceneView.JoinBtn.onClick.AddListener(OnJoinRoom);
         LobbyManager.OnLobbyChanged += OnLobbyChanged;
+        MultiplayerManager.OnNetworkProblem += ShowOnNetworkProblem;
     }
 
 
@@ -189,9 +190,13 @@ public class MenuSceneManager : MonoBehaviour
         //TODO
         //sceneView.ShowPopup("Lobby Full", "The lobby you attempted to join is full.\n\nPlease try a different lobby.");
         Debug.LogWarning("The lobby you attempted to join is full.\n\nPlease try a different lobby.");
-
     } 
-    
+
+    void ShowOnNetworkProblem()
+    {
+        _sceneView.ShowPopup("Oops!", "Network unavailable.\n\nPlease try again.");
+    }
+
     void ShowAnotherPlayerNotJoinedYetPopup()
     {
         //TODO
@@ -203,5 +208,7 @@ public class MenuSceneManager : MonoBehaviour
     void OnDestroy()
     {
         LobbyManager.OnLobbyChanged -= OnLobbyChanged;
+        MultiplayerManager.OnNetworkProblem -= ShowOnNetworkProblem;
+
     }
 }

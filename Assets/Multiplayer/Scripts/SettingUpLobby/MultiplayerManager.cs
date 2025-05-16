@@ -13,6 +13,8 @@ public class MultiplayerManager : MonoBehaviour
 
     [SerializeField] private MenuSceneManager _menuSceneManager;
 
+    public static Action OnNetworkProblem;
+
     public bool isInitialized { get; private set; }
 
 
@@ -70,8 +72,12 @@ public class MultiplayerManager : MonoBehaviour
             if (this == null) return;
 
             //Initialize and sign in to vivox service
-            await VivoxVoiceManager.Instance.InitializeAndSignInVivox(PeerData.LP.Name);
             isInitialized = true;
+
+            if(isInitialized)
+                await VivoxVoiceManager.Instance.InitializeAndSignInVivox(PeerData.LP.Name);
+
+
 
             _menuSceneManager.ActivateMainMenuUI(PeerData.LP.Name);
             SpawnManager.Instance.SpawnLocalPlayer(PeerData.LP.Gender);

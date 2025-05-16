@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Unity.Services.Authentication;
 using Unity.Services.Lobbies.Models;
@@ -85,7 +86,7 @@ public class LobbySceneManager : MonoBehaviour
     /// <summary>
     /// This method will invoke if both the players Ready Flag set to true
     /// </summary>
-    private void OnGameReady()
+    private void OnGameReady(List<Player> players)
     {
         Debug.Log("Game is ready to start");
     }

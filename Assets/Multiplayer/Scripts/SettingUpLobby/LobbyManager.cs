@@ -52,7 +52,7 @@ public class LobbyManager : MonoBehaviour
     float m_NextUpdatePlayersTime;
 
     public static event Action<Lobby> OnLobbyChanged;
-    public static event Action OnGameReady;
+    public static event Action<List<Player>> OnGameReady;
     public static event Action<Player,string> OnPlayerInitiateToPlayGame;
 
 
@@ -349,52 +349,107 @@ public class LobbyManager : MonoBehaviour
 
         //Test(updatedLobby);
         var isGameReady = IsGameReady(updatedLobby);
-        var isPlayerInitiateToPlayGame = IsPlayerInitiateToPlayGame(updatedLobby, out var readyPlayer);
-        Debug.Log($"Test isGame Ready {isGameReady}");
-        Debug.Log($"Test isPlayerInitiateToPlayGame {isPlayerInitiateToPlayGame}");
-        TestDebug(updatedLobby);
+        //var isPlayerInitiateToPlayGame = IsPlayerInitiateToPlayGame(updatedLobby, out var readyPlayer);
+        //Debug.Log($"Test isGame Ready {isGameReady}");
+        //Debug.Log($"Test isPlayerInitiateToPlayGame {isPlayerInitiateToPlayGame}");
+        //TestDebug(updatedLobby);
         if (DidPlayersChange(activeLobby.Players, updatedLobby.Players))
         {
             Debug.LogError("In didplayerchange");
             activeLobby = updatedLobby;
             players = activeLobby?.Players;
             if (updatedLobby.Players.Exists(player => player.Id == playerId))
+            {
                 OnLobbyChanged?.Invoke(updatedLobby);
-
-            else
-                OnPlayerNotInLobby();
-        }
-
-        if(isGameReady)
-        {
-            activeLobby = updatedLobby;
-            players = activeLobby?.Players;
-            if (updatedLobby.Players.Exists(player => player.Id == playerId))
-            {
-                OnGameReady?.Invoke();
-                return;
             }
-            else
-            {
-                OnPlayerNotInLobby();
 
+            else
+                OnPlayerNotInLobby();
+        }
+
+        if (isGameReady)
+        {
+            if (DoPlayerSelectedGameMatched(updatedLobby.Players))
+            {
+                activeLobby = updatedLobby;
+                players = activeLobby?.Players;
+                if (updatedLobby.Players.Exists(player => player.Id == playerId))
+                {
+                    OnGameReady?.Invoke(players);
+                    return;
+                }
+                else
+                {
+                    OnPlayerNotInLobby();
+
+                }
             }
         }
-        if(isPlayerInitiateToPlayGame && readyPlayer.Id != playerId && m_playerSelectedGame == GameType.None)
-        {
+        //if (isPlayerInitiateToPlayGame && readyPlayer.Id != playerId && m_playerSelectedGame == GameType.None)
+        //{
 
-            activeLobby = updatedLobby;
-            players = activeLobby?.Players;
-            if (updatedLobby.Players.Exists(player => player.Id == playerId))
-                OnPlayerInitiateToPlayGame?.Invoke(readyPlayer, GetPlayerSelectedGame(readyPlayer));
+        //    activeLobby = updatedLobby;
+        //    players = activeLobby?.Players;
+        //    if (updatedLobby.Players.Exists(player => player.Id == playerId))
+        //        OnPlayerInitiateToPlayGame?.Invoke(readyPlayer, GetPlayerSelectedGame(readyPlayer));
 
-            else
-                OnPlayerNotInLobby();
-        }
+        //    else
+        //        OnPlayerNotInLobby();
+        //}
+
+        DetectPlayerReadyStates(updatedLobby.Players);
 
 
 
     }
+
+    private void DetectPlayerReadyStates(List<Player> players)
+    {
+        if (players.Count <= 1)
+        {
+            return;
+        }
+
+        var localPlayer = players.FirstOrDefault(p => p.Id == playerId);
+        var remotePlayer = players.FirstOrDefault(p => p.Id != playerId);
+
+        var isremotePlayerReady = bool.Parse(remotePlayer.Data[k_IsReadyKey].Value);
+        var remotePlayerSelectedGame = Enum.Parse<GameType>(remotePlayer.Data[k_SelectedGameKey].Value);
+
+        //this means this will be called if started Game Request
+        if (m_IsPlayerReady == true && !isremotePlayerReady && m_playerSelectedGame != GameType.None && remotePlayerSelectedGame == GameType.None)
+        {
+            Debug.Log($"You Want to play {m_playerSelectedGame} my state = {m_IsPlayerReady} Another Player state = {isremotePlayerReady} , Remote Player Selected Game {remotePlayerSelectedGame}");
+        }
+        //this means this will be called if received Game Request
+        if (!m_IsPlayerReady && isremotePlayerReady && m_playerSelectedGame == GameType.None && remotePlayerSelectedGame != GameType.None)
+        {
+            Debug.Log($"You Want to play {m_playerSelectedGame} my state = {m_IsPlayerReady} Another Player state = {isremotePlayerReady} , Remote Player Selected Game {remotePlayerSelectedGame}");
+        }
+
+        if(debug)
+            Debug.Log($"You Want to play {m_playerSelectedGame} my state = {m_IsPlayerReady} Another Player state = {isremotePlayerReady} , Remote Player Selected Game {remotePlayerSelectedGame}");
+
+
+    }
+
+    public bool debug;
+
+    private bool DoPlayerSelectedGameMatched(List<Player> players)
+    {
+        if (players.Count <= 1)
+        {
+            return false;
+        }
+        var remotePlayer = players.FirstOrDefault(p => p.Id != playerId);
+        if (m_playerSelectedGame != GameType.None && m_playerSelectedGame == Enum.Parse<GameType>(remotePlayer.Data[k_SelectedGameKey].Value))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
 
     private string GetPlayerSelectedGame(Player player)
     {
@@ -454,9 +509,6 @@ public class LobbyManager : MonoBehaviour
                 return true;
             }
         }
-        return false;
-
-
         return false;
     }
 

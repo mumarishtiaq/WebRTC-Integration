@@ -22,6 +22,7 @@ public static class AuthenticationManager
         {
             //TODO: show popup on sign in failed
             Debug.LogException(e);
+            MultiplayerManager.OnNetworkProblem?.Invoke();
         }
     }
 
