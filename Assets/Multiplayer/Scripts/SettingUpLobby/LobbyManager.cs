@@ -45,15 +45,20 @@ public class LobbyManager : MonoBehaviour
 
      public static GameType m_playerSelectedGame  = GameType.None;
 
-    bool m_WasGameStarted = false;
+    public static bool m_WasGameStarted = false;
 
     float m_NextHostHeartbeatTime;
 
     float m_NextUpdatePlayersTime;
 
     public static event Action<Lobby> OnLobbyChanged;
-    public static event Action<List<Player>> OnGameReady;
+    public static event Action<List<Player>,GameType> OnGameReady;
     public static event Action<Player,string> OnPlayerInitiateToPlayGame;
+    public static event Action<string, GameType> OnGameRequestInitiated;
+    public static event Action<Player, GameType> OnGameRequestReceived;
+
+    //on game started will invoke when any game started , and it will set ready state to false and gametype to None
+    public static Action OnGameStarted;
 
 
 
@@ -73,7 +78,6 @@ public class LobbyManager : MonoBehaviour
 
     public static event Action OnPlayerNotInLobbyEvent;
 
-    float heartbeatTimer;
     void Awake()
     {
         if (Instance != null && Instance != this)
@@ -85,12 +89,16 @@ public class LobbyManager : MonoBehaviour
             Instance = this;
         }
     }
+    private void Start()
+    {
+        OnGameStarted += OnAnyGameStarted;
+    }
 
     async void Update()
     {
         try
         {
-            if (activeLobby != null && !m_WasGameStarted)
+            if (activeLobby != null /*&& !m_WasGameStarted*/)
             {
                 if (isHost && Time.realtimeSinceStartup >= m_NextHostHeartbeatTime)
                 {
@@ -100,8 +108,9 @@ public class LobbyManager : MonoBehaviour
                     return;
                 }
 
-                if (Time.realtimeSinceStartup >= m_NextUpdatePlayersTime)
+                if (Time.realtimeSinceStartup >= m_NextUpdatePlayersTime && !m_WasGameStarted)
                 {
+                    Debug.LogError("In updating lobby");
                     await PeriodicUpdateLobby();
                 }
             }
@@ -170,18 +179,6 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    [ContextMenu("Create Lobby")]
-    private void LobbyCreateTest()
-    {
-
-        CreateLobby(MultiplayerManager.Instance.PeerData.CommonRoomName, MultiplayerManager.Instance.PeerData.LP.Name, "TestRelayCode");
-    }
-
-    [ContextMenu("GetPublicLobbiesTest")]
-    private void GetPublicLobbiesTest()
-    {
-        GetPublicLobbies(MultiplayerManager.Instance.PeerData.CommonRoomName);
-    }
     public async Task<Lobby> CreateLobby(string lobbyName, string hostName, string relayJoinCode)
     {
         try
@@ -344,6 +341,12 @@ public class LobbyManager : MonoBehaviour
 
     void UpdateLobby(Lobby updatedLobby)
     {
+        if(m_WasGameStarted)
+        {
+            activeLobby = updatedLobby;
+            players = activeLobby?.Players;
+            return;
+        }
         // Since this is called after an await, ensure that the Lobby wasn't closed while waiting.
         if (activeLobby == null || updatedLobby == null) return;
 
@@ -375,7 +378,7 @@ public class LobbyManager : MonoBehaviour
                 players = activeLobby?.Players;
                 if (updatedLobby.Players.Exists(player => player.Id == playerId))
                 {
-                    OnGameReady?.Invoke(players);
+                    OnGameReady?.Invoke(players,m_playerSelectedGame);
                     return;
                 }
                 else
@@ -385,27 +388,16 @@ public class LobbyManager : MonoBehaviour
                 }
             }
         }
-        //if (isPlayerInitiateToPlayGame && readyPlayer.Id != playerId && m_playerSelectedGame == GameType.None)
-        //{
-
-        //    activeLobby = updatedLobby;
-        //    players = activeLobby?.Players;
-        //    if (updatedLobby.Players.Exists(player => player.Id == playerId))
-        //        OnPlayerInitiateToPlayGame?.Invoke(readyPlayer, GetPlayerSelectedGame(readyPlayer));
-
-        //    else
-        //        OnPlayerNotInLobby();
-        //}
-
-        DetectPlayerReadyStates(updatedLobby.Players);
+       
+        DetectPlayerReadyStates(updatedLobby);
 
 
 
     }
 
-    private void DetectPlayerReadyStates(List<Player> players)
+    private void DetectPlayerReadyStates(Lobby lobby)
     {
-        if (players.Count <= 1)
+        if (lobby.Players.Count <= 1)
         {
             return;
         }
@@ -420,11 +412,18 @@ public class LobbyManager : MonoBehaviour
         if (m_IsPlayerReady == true && !isremotePlayerReady && m_playerSelectedGame != GameType.None && remotePlayerSelectedGame == GameType.None)
         {
             Debug.Log($"You Want to play {m_playerSelectedGame} my state = {m_IsPlayerReady} Another Player state = {isremotePlayerReady} , Remote Player Selected Game {remotePlayerSelectedGame}");
+            activeLobby = lobby;
+            players = activeLobby?.Players;
+            OnGameRequestInitiated?.Invoke(playerId,m_playerSelectedGame);
         }
         //this means this will be called if received Game Request
         if (!m_IsPlayerReady && isremotePlayerReady && m_playerSelectedGame == GameType.None && remotePlayerSelectedGame != GameType.None)
         {
             Debug.Log($"You Want to play {m_playerSelectedGame} my state = {m_IsPlayerReady} Another Player state = {isremotePlayerReady} , Remote Player Selected Game {remotePlayerSelectedGame}");
+
+            activeLobby = lobby;
+            players = activeLobby?.Players;
+            OnGameRequestReceived?.Invoke(remotePlayer, remotePlayerSelectedGame);
         }
 
         if(debug)
@@ -559,7 +558,7 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    public async Task ToggleReadyStateAndSetSelectedGame()
+    public async Task ToggleReadyStateAndSetSelectedGame(bool isReady, GameType selectedGame)
     {
         try
         {
@@ -569,7 +568,8 @@ public class LobbyManager : MonoBehaviour
                 return;
             }
 
-            m_IsPlayerReady = !m_IsPlayerReady;
+            m_IsPlayerReady = isReady;
+            m_playerSelectedGame = selectedGame;
 
             var lobbyId = activeLobby.Id;
 
@@ -619,6 +619,22 @@ public class LobbyManager : MonoBehaviour
 
         return playerDictionary;
     }
+    public string GetPlayerId(int playerIndex)
+    {
+        return players[playerIndex].Id;
+    }
+
+    public string GetPlayerName(int playerIndex)
+    {
+        var player = players[playerIndex].Data;
+        return player[k_PlayerNameKey].Value;
+    }
+
+    private void OnAnyGameStarted()
+    {
+        ToggleReadyStateAndSetSelectedGame(false, GameType.None);
+    }
+
 
     void OnDestroy()
     {
@@ -626,6 +642,8 @@ public class LobbyManager : MonoBehaviour
         {
             Instance = null;
         }
+
+        OnGameStarted -= OnAnyGameStarted;
     }
 
     #region Debugging

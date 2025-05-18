@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,16 +17,27 @@ public class VoiceSceneManager : MonoBehaviour
 {
     [SerializeField] private VoiceSceneView _sceneView;
 
-    [SerializeField] private VivoxParticipant _localParticipant;
+    //[SerializeField] private VivoxParticipant _localParticipant;
 
     [SerializeField] private GameObject  _partipantAudioTap;
 
     PeerData _peerData => MultiplayerManager.Instance.PeerData;
 
+    private bool isChannelAlreadyJoined = false;
+
     private async void Awake()
     {
+        if (VivoxVoiceManager.Instance.isInitializeAndLoggedIn)
+        {
+            //channel not joined
+            if (!VivoxService.Instance.ActiveChannels.ContainsKey(_peerData.CommonRoomName))
+            {
+                await VivoxVoiceManager.Instance.JoinVoiceChannel(_peerData.CommonRoomName);
+            }
+        }
+            
+
         
-       await VivoxVoiceManager.Instance.JoinVoiceChannel(_peerData.CommonRoomName);
 
 
         //if (IsMicPermissionGranted())
@@ -64,22 +76,27 @@ public class VoiceSceneManager : MonoBehaviour
 
             VivoxVoiceManager.OnConnecting = () => SetConnecting();
 
-            //if (VivoxService.Instance.ActiveChannels[_peerData.CommonRoomName].Count == 2)
-            //{
-            //    SetConnected(ParticipantType.Local);
-            //    SetConnected(ParticipantType.Remote);
-            //}
-            //else
+            if (VivoxService.Instance.ActiveChannels.TryGetValue(_peerData.CommonRoomName, out var participants) && participants.Count == 2)
+            {
+                SetConnected(ParticipantType.Local);
+                SetConnected(ParticipantType.Remote);
+                _sceneView.AudioToggleActiveState(true);
+                _sceneView.OnToggleSpriteSwap(VivoxVoiceManager.LocalParticipant.IsMuted);
+            }
+
+            else
             {
                 SetConnecting(ParticipantType.Local);
                 SetConnecting(ParticipantType.Remote);
+                _sceneView.AudioToggleActiveState(false);
             }
-            
+
         }
         else
         {
             SetDisConnected(ParticipantType.Local);
             SetDisConnected(ParticipantType.Remote);
+            _sceneView.AudioToggleActiveState(false);
         }
     }
 
@@ -137,8 +154,8 @@ public class VoiceSceneManager : MonoBehaviour
         //binding event for self
         else
         {
-            _localParticipant = participant;
-            _sceneView.OnToggleSpriteSwap(_localParticipant.IsMuted);
+            VivoxVoiceManager.LocalParticipant = participant;
+            _sceneView.OnToggleSpriteSwap(VivoxVoiceManager.LocalParticipant.IsMuted);
             _sceneView.AudioToggleActiveState(true);
             SpawnManager.Instance.SetupLipSyncComponents(ParticipantType.Local);
 
@@ -151,8 +168,7 @@ public class VoiceSceneManager : MonoBehaviour
         _partipantAudioTap = participant.CreateVivoxParticipantTap();
 
         SpawnManager.Instance.SetupLipSyncComponents(ParticipantType.Remote, _partipantAudioTap);
-        //SetupLipSyncComponents(_partipantAudioTap, SpawnManager.Instance.RemotePlayerAvatar.HeadMesh);
-
+        DontDestroyOnLoad(_partipantAudioTap);
     }
 
     private void OnParticipantRemoved(VivoxParticipant participant)
@@ -185,51 +201,19 @@ public class VoiceSceneManager : MonoBehaviour
    
     public void ToggleMute()
     {
-        if (_localParticipant.IsMuted)
+        if (VivoxVoiceManager.LocalParticipant.IsMuted)
         {
-            _localParticipant.UnmutePlayerLocally();
+            VivoxVoiceManager.LocalParticipant.UnmutePlayerLocally();
         }
         else
         {
-            _localParticipant.MutePlayerLocally();
+            VivoxVoiceManager.LocalParticipant.MutePlayerLocally();
         }
-        _sceneView.OnToggleSpriteSwap(_localParticipant.IsMuted);
-        Debug.Log($"Currently local is Muted : {_localParticipant.IsMuted}");
+        _sceneView.OnToggleSpriteSwap(VivoxVoiceManager.LocalParticipant.IsMuted);
+        Debug.Log($"Currently local is Muted : {VivoxVoiceManager.LocalParticipant.IsMuted}");
 
 
     }
-
-    private void SetupLipSyncComponents(GameObject audioTapObj, SkinnedMeshRenderer rend)
-    {
-        if (audioTapObj != null)
-        {
-            //getting and setting up audio source
-           var src= audioTapObj.GetComponent<AudioSource>();
-            //src.playOnAwake = true;
-            //src.loop = true;
-            //src.mute = false;
-            //src.spatialBlend = 0f;
-            //if (!src.isPlaying)
-            //    src.Play();
-
-
-            var lipSync = audioTapObj.AddComponent<OVRLipSyncContext>();
-            lipSync.audioSource = src;
-            lipSync.audioLoopback = true;
-
-            var morph = audioTapObj.AddComponent<OVRLipSyncContextMorphTarget>();
-            morph.skinnedMeshRenderer = rend;
-        }
-        else
-        {
-            Debug.Log("Tap Obj is null");
-        }
-    }
-
-
-
-
-
     #region Permissions
 
     int m_PermissionAskedCount;

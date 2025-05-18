@@ -123,6 +123,41 @@ namespace TicTacToe
         };
         }
 
+        private void Start()
+        {
+            //Debug.Log("OnNetworkSpawn: " + NetworkManager.Singleton.LocalClientId);
+            //if (NetworkManager.Singleton.LocalClientId == 0)
+            //{
+            //    localPlayerType = PlayerType.Cross;
+            //}
+            //else
+            //{
+            //    localPlayerType = PlayerType.Circle;
+            //}
+
+            //if (IsServer)
+            //{
+            //    //NetworkManager.Singleton.OnClientConnectedCallback += NetworkManager_OnClientConnectedCallback;
+            //    NetworkManager_OnClientConnectedCallback();
+            //}
+
+            //currentPlayablePlayerType.OnValueChanged += (PlayerType oldPlayerType, PlayerType newPlayerType) =>
+            //{
+            //    OnCurrentPlayablePlayerTypeChanged?.Invoke(this, EventArgs.Empty);
+            //};
+
+            //playerCrossScore.OnValueChanged += (int prevScore, int newScore) =>
+            //{
+            //    OnScoreChanged?.Invoke(this, EventArgs.Empty);
+            //};
+            //playerCircleScore.OnValueChanged += (int prevScore, int newScore) =>
+            //{
+            //    OnScoreChanged?.Invoke(this, EventArgs.Empty);
+            //};
+        }
+
+       
+
 
         public override void OnNetworkSpawn()
         {
@@ -156,7 +191,7 @@ namespace TicTacToe
             };
         }
 
-        private void NetworkManager_OnClientConnectedCallback(ulong obj)
+        private void NetworkManager_OnClientConnectedCallback(ulong obj = 1)
         {
             if (NetworkManager.Singleton.ConnectedClientsList.Count == 2)
             {
@@ -165,6 +200,8 @@ namespace TicTacToe
                 TriggerOnGameStartedRpc();
             }
         }
+
+
 
         [Rpc(SendTo.ClientsAndHost)]
         private void TriggerOnGameStartedRpc()

@@ -2898,8 +2898,8 @@ GameObject:
   m_Component:
   - component: {fileID: 7329894119208167026}
   - component: {fileID: 3569917480369080947}
-  - component: {fileID: 1427941929956914848}
   - component: {fileID: 824616157550826534}
+  - component: {fileID: -944393894481279839}
   m_Layer: 0
   m_Name: Male_2
   m_TagString: Untagged
@@ -2955,23 +2955,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &1427941929956914848
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6835336204458889133}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 247fc36ca2524089b3dc351f824e6a3e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  AvatarId: 6816879d3117d5905d94f13c
-  AvatarMetadata:
-    BodyType: 1
-    OutfitGender: 1
-    SkinTone: '#be8677'
 --- !u!114 &824616157550826534
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2986,6 +2969,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _animator: {fileID: 3569917480369080947}
   HeadMesh: {fileID: 8741141436126443906}
+--- !u!114 &-944393894481279839
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6835336204458889133}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8112819fa10b2549869292e920d4a6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  blinkDuration: 0.1
+  blinkInterval: 3
 --- !u!1 &6847993967326346195
 GameObject:
   m_ObjectHideFlags: 0

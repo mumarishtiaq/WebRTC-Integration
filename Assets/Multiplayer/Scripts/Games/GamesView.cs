@@ -80,8 +80,8 @@ public class GamesView : MonoBehaviour
 public enum GameType
 {
     None = -1,
-    Tik_Tak_Toe = 0,
-    Bubble_Shooter = 1,
+    Tic_Tac_Toe = 0,
+    Coin_Rush = 1,
     Chess = 2
 }
 

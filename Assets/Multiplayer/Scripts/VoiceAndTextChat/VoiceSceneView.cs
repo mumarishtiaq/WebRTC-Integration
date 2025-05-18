@@ -34,10 +34,10 @@ public class VoiceSceneView : MonoBehaviour
 
 
 
-    private void Start()
-    {
-        AudioToggleActiveState(false);
-    }
+    //private void Start()
+    //{
+    //    AudioToggleActiveState(false);
+    //}
 
 
     public void SetParticipantVoiceStatus(ParticipantType type,VoiceStatus status)
@@ -92,11 +92,7 @@ public class VoiceSceneView : MonoBehaviour
     }
 
 
-    //private void OnDestroy()
-    //{
-    //    VivoxVoiceManager.OnVoiceStatusChanged -= SetLocalPlayerVoiceStatus;
-
-    //}
+  
 
 
 

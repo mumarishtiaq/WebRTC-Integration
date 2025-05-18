@@ -13,7 +13,7 @@ public class NetworkServiceManager : MonoBehaviour
     [SerializeField]
     UnityTransport m_UnityTransport;
 
-    bool m_NetworkManagerInitialized = false;
+   public bool m_NetworkManagerInitialized = false;
 
     void Awake()
     {

@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using System.Collections.Generic;
 using TMPro;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
@@ -17,64 +18,66 @@ public class LobbySceneView : SceneViewBase
 
 
 
-
-
-
-
-
-
     public void SetRemotePlayerData(string playerName)
     {
         remotePayerDataHolder.SetActive(true);
         remotePlayerNameText.text = $"{playerName}";
     }
 
-
-    public void SetLobbyPanelForPlayerWhoInitiate(string gameName, string playerID)
+    public void SetLobbyPanelForPlayerWhoInitiateTest(string playerID, string requestedGameName)
     {
-        //spawning player icons
-        _lobbyPanelView.SpawnPlayerIcons(playerID);
-        
-        //sequencing player, the player who initiate to play will display on left side
-        _lobbyPanelView.SequencePlayers(playerID, true);
+        if (!_lobbyPanelView.IsPanelOpened)
+        {
+            //spawning players and sequence players icons so they player who initiate game request will appear on left side
+            _lobbyPanelView.SpawnPlayerIcons(playerID);
 
-        //set player icon ready state
-        _lobbyPanelView.SetReadyState(playerID,true);
+            //set button visiblity as per reqest sender and receiving roles
+            var isInitiator = playerID == LobbyManager.playerId;
+            _lobbyPanelView.SetButtonsVisiblity(isInitiator);
 
+            //Opening panel 
+            _lobbyPanelView.OpenLobbyPanel("You want to play", requestedGameName);
+        }
+        _lobbyPanelView.SetReadyStates();
+    }  
+    
+    public void SetLobbyPanelForPlayerWhoReceiveGameRequest(Player player, string requestedGameName)
+    {
+        if (!_lobbyPanelView.IsPanelOpened)
+        {
+            //spawning players and sequence players icons so they player who initiate game request will appear on left side
+            _lobbyPanelView.SpawnPlayerIcons(player.Id);
 
-        _lobbyPanelView.SetButtonsState(true);
+            //set button visiblity as per reqest sender and receiving roles
+            var isInitiator = player.Id == LobbyManager.playerId;
+            _lobbyPanelView.SetButtonsVisiblity(isInitiator);
 
-        //opening lobby panel
-        _lobbyPanelView.OpenLobbyPanel("You want to play", gameName);
-
-
-
+            //Opening panel 
+            var playerName = player.Data[LobbyManager.k_PlayerNameKey].Value;
+            _lobbyPanelView.OpenLobbyPanel($"{playerName} wants to play", requestedGameName);
+        }
+        _lobbyPanelView.SetReadyStates();
     }
 
 
-    public void SetLobbyPanelForPlayerWhoReceiveRequest(string playerID, string readyPlayerId,string readyPlayerName,string requestedGameName)
+    public void SetReadyStates()
     {
-        //spawning player icons
-        _lobbyPanelView.SpawnPlayerIcons(playerID);
-
-        //sequencing player, the player who initiate to play will display on left side
-        _lobbyPanelView.SequencePlayers(playerID,isInitiator: false);
-
-        //set player icon ready state
-        _lobbyPanelView.SetReadyState(playerID, false);
-        _lobbyPanelView.SetReadyState(readyPlayerId, true);
-
-        _lobbyPanelView.SetButtonsState(false);
-
-
-        //opening lobby panel
-        _lobbyPanelView.OpenLobbyPanel($"{readyPlayerName} wants to play", requestedGameName);
+        _lobbyPanelView.SetReadyStates();
     }
 
-    public void SwitchReadyState(string playerId)
+    public void CloseLobbyPanel()
     {
-        _lobbyPanelView.SwitchReadyState(playerId);
+        _lobbyPanelView.Close();
+        SetInteractable(true);
     }
+
+    public void ShowJoining()
+    {
+        _lobbyPanelView.SetJoiningObj(true);
+    }
+
+
+
 
 
 

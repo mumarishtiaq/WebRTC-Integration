@@ -27,33 +27,52 @@ public class LobbyPanelView : MonoBehaviour
 
     [SerializeField]
     Button _leaveBtn;
+    
+    [SerializeField]
+    GameObject _joiningObj;
 
     private List<PlayerIconView> _playerIcons = new List<PlayerIconView>();
 
+    public bool IsPanelOpened { get; set; }
 
 
+
+    
 
     public void OpenLobbyPanel(string title, string gameName)
     {
-        _lobbyPanel.SetActive(true);
+        IsPanelOpened = true;
+        _lobbyPanel.SetActive(IsPanelOpened);
         _title.text = title;
         _gameName.text = gameName;
+
+        SetJoiningObj(false);
+    }
+    public void Close()
+    {
+        IsPanelOpened = false;
+        _lobbyPanel.SetActive(IsPanelOpened);
+        RemoveAllPlayers();
     }
 
     internal void SpawnPlayerIcons(string playerID)
     {
+        if (IsPanelOpened) return;
+
         RemoveAllPlayers();
         foreach (Player player in LobbyManager.Instance.players) 
         {
             var playerIcon = GameObject.Instantiate(playerIconPrefab, playersContainer);
 
             var playerId = player.Id;
-            var playerName = playerID == player.Id ? "You":player.Data[LobbyManager.k_PlayerNameKey].Value;
+            var playerName = player.Id == LobbyManager.playerId  ? "You":player.Data[LobbyManager.k_PlayerNameKey].Value;
 
             playerIcon.Initialize(playerId, playerName);
 
             _playerIcons.Add(playerIcon);
         }
+
+        SequencePlayers(playerID);
     }
 
     internal void SetReadyState(string playerID, bool isReady)
@@ -63,23 +82,38 @@ public class LobbyPanelView : MonoBehaviour
             playerIcon.SetReady(isReady);
     }
 
-    internal void SequencePlayers(string playerID, bool isInitiator)
+    public void SetReadyStates()
+    {
+        foreach (Player player in LobbyManager.Instance.players)
+        {
+            var isReady = bool.Parse(player.Data[LobbyManager.k_IsReadyKey].Value);
+            var playerIcon = GetPlayerIcon(player.Id);
+            if (playerIcon)
+                playerIcon.SetReady(isReady);
+        }
+    }
+
+    private void SequencePlayers(string playerID)
     {
         var icon = GetPlayerIcon(playerID);
         if (icon == null) return;
 
-        if (isInitiator)
-            icon.transform.SetAsFirstSibling();
-        else
-            icon.transform.SetAsLastSibling();
-    } 
-    
-    internal void SetButtonsState(bool isInitiator)
+        icon.transform.SetAsFirstSibling();
+    }
+
+    public void SetButtonsVisiblity(bool isInitiator)
     {
         _acceptBtn.gameObject.SetActive(!isInitiator);
         _rejectBtn.gameObject.SetActive(!isInitiator);
         _leaveBtn.gameObject.SetActive(isInitiator);
     }
+
+    public void SetJoiningObj(bool state)
+    {
+        _joiningObj.SetActive(state);
+
+    }
+
     public void SwitchReadyState(string playerID)
     {
         var icon = GetPlayerIcon(playerID);

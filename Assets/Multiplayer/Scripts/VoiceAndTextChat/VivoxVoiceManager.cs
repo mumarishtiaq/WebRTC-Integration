@@ -12,6 +12,9 @@ public class VivoxVoiceManager : MonoBehaviour
 
     public static Action OnConnecting;
 
+    public static VivoxParticipant LocalParticipant;
+
+
 
     private async void Awake()
     {

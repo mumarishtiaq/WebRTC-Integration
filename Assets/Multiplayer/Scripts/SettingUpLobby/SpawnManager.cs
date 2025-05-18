@@ -60,7 +60,8 @@ public class SpawnManager : MonoBehaviour
     
     public void SpawnRemotePlayer(int avatarIndex , PlayerGender gender)
     {
-        if (!_avatars) return;
+        if (!_avatars || RemotePlayerAvatar != null) return;
+
 
         var character = SpawnPlayer(avatarIndex, gender);
         RemotePlayerAvatar = character.GetComponent<PlayerAnimationController>();
