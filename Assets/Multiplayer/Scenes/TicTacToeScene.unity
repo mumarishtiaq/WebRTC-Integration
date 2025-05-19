@@ -757,7 +757,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2413339046076559967, guid: 170dd064c6f0d5b4d85cb76f53002f37, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6955463910980871869, guid: 170dd064c6f0d5b4d85cb76f53002f37, type: 3}
       propertyPath: m_Name
@@ -1456,7 +1456,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1624792013
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1904,8 +1904,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1975395443}
-  - component: {fileID: 1975395445}
   - component: {fileID: 1975395444}
+  - component: {fileID: 1975395445}
   m_Layer: 0
   m_Name: GameVisualManager
   m_TagString: Untagged

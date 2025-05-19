@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace TicTacToe
+namespace Games.TicTacToe
 {
     public class GridPosition : MonoBehaviour
     {

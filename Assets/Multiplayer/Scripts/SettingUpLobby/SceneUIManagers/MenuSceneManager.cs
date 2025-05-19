@@ -128,8 +128,8 @@ public class MenuSceneManager : MonoBehaviour
             }
             else
             {
-                var relayJoinCode = lobbyJoined.Data[LobbyManager.k_RelayJoinCodeKey].Value;
-                await NetworkServiceManager.Instance.InitializeClient(relayJoinCode);
+                //var relayJoinCode = lobbyJoined.Data[LobbyManager.k_RelayJoinCodeKey].Value;
+                //await NetworkServiceManager.Instance.InitializeClient(relayJoinCode);
                 //await LoadLobbyScene();
             }
 

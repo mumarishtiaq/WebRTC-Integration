@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace TicTacToe
+namespace Games.TicTacToe
 {
     public class GameOverUI : MonoBehaviour
     {

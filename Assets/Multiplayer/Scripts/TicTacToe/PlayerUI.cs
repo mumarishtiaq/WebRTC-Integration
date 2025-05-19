@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-namespace TicTacToe
+namespace Games.TicTacToe
 {
     public class PlayerUI : MonoBehaviour
     {
