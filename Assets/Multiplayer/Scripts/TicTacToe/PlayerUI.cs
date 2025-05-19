@@ -1,4 +1,6 @@
+using System.Runtime.CompilerServices;
 using TMPro;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace Games.TicTacToe
@@ -14,7 +16,7 @@ namespace Games.TicTacToe
         [SerializeField] private TextMeshProUGUI playerCrossScoreTextMesh;
         [SerializeField] private TextMeshProUGUI playerCircleScoreTextMesh;
 
-
+        public static PlayerUI Instance;
 
         private void Awake()
         {
@@ -25,6 +27,8 @@ namespace Games.TicTacToe
 
             playerCrossScoreTextMesh.text = "";
             playerCircleScoreTextMesh.text = "";
+
+            Instance = this;
         }
 
         private void Start()
@@ -32,6 +36,7 @@ namespace Games.TicTacToe
             GameManager.Instance.OnGameStarted += GameManager_OnGameStarted;
             GameManager.Instance.OnCurrentPlayablePlayerTypeChanged += GameManager_OnCurrentPlayablePlayerTypeChanged;
             GameManager.Instance.OnScoreChanged += GameManager_OnScoreChanged;
+
         }
 
         private void GameManager_OnScoreChanged(object sender, System.EventArgs e)
@@ -47,8 +52,10 @@ namespace Games.TicTacToe
             UpdateCurrentArrow();
         }
 
-        private void GameManager_OnGameStarted(object sender, System.EventArgs e)
+        public void GameManager_OnGameStarted(object sender, System.EventArgs e)
         {
+            Debug.LogError($"PlayerUI ,");
+
             if (GameManager.Instance.GetLocalPlayerType() == GameManager.PlayerType.Cross)
             {
                 crossYouTextGameObject.SetActive(true);

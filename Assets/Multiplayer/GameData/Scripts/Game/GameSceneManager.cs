@@ -99,7 +99,7 @@ namespace Games.CoinRush
 
         void ShowInitialGameTime()
         {
-            sceneView.arenaUiOverlayPanelView.ShowGameTimer(60);
+            sceneView.arenaUiOverlayPanelView.ShowGameTimer((int)GameConfig.gameDuration);
         }
 
         public void OnGameOver(GameResultsData results)

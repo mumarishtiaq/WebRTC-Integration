@@ -1,7 +1,11 @@
+using NUnit.Framework.Constraints;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Games.TicTacToe
 {
@@ -121,7 +125,12 @@ namespace Games.TicTacToe
                 orientation = Orientation.DiagonalB,
             },
         };
+
+
+            
+           
         }
+
 
         private void Start()
         {
@@ -137,8 +146,8 @@ namespace Games.TicTacToe
 
             if (IsServer)
             {
-                NetworkManager.Singleton.OnClientConnectedCallback += NetworkManager_OnClientConnectedCallback;
-                //NetworkManager_OnClientConnectedCallback();
+                //NetworkManager.Singleton.OnClientConnectedCallback += NetworkManager_OnClientConnectedCallback;
+                NetworkManager_OnClientConnectedCallback();
             }
 
             currentPlayablePlayerType.OnValueChanged += (PlayerType oldPlayerType, PlayerType newPlayerType) =>
@@ -156,40 +165,42 @@ namespace Games.TicTacToe
             };
         }
 
-       
 
 
-        public override void OnNetworkSpawn()
-        {
-            Debug.Log("OnNetworkSpawn: " + NetworkManager.Singleton.LocalClientId);
-            if (NetworkManager.Singleton.LocalClientId == 0)
-            {
-                localPlayerType = PlayerType.Cross;
-            }
-            else
-            {
-                localPlayerType = PlayerType.Circle;
-            }
 
-            if (IsServer)
-            {
-                NetworkManager.Singleton.OnClientConnectedCallback += NetworkManager_OnClientConnectedCallback;
-            }
 
-            currentPlayablePlayerType.OnValueChanged += (PlayerType oldPlayerType, PlayerType newPlayerType) =>
-            {
-                OnCurrentPlayablePlayerTypeChanged?.Invoke(this, EventArgs.Empty);
-            };
 
-            playerCrossScore.OnValueChanged += (int prevScore, int newScore) =>
-            {
-                OnScoreChanged?.Invoke(this, EventArgs.Empty);
-            };
-            playerCircleScore.OnValueChanged += (int prevScore, int newScore) =>
-            {
-                OnScoreChanged?.Invoke(this, EventArgs.Empty);
-            };
-        }
+        //public override void OnNetworkSpawn()
+        //{
+        //    Debug.Log("OnNetworkSpawn: " + NetworkManager.Singleton.LocalClientId);
+        //    if (NetworkManager.Singleton.LocalClientId == 0)
+        //    {
+        //        localPlayerType = PlayerType.Cross;
+        //    }
+        //    else
+        //    {
+        //        localPlayerType = PlayerType.Circle;
+        //    }
+
+        //    if (IsServer)
+        //    {
+        //        NetworkManager.Singleton.OnClientConnectedCallback += NetworkManager_OnClientConnectedCallback;
+        //    }
+
+        //    currentPlayablePlayerType.OnValueChanged += (PlayerType oldPlayerType, PlayerType newPlayerType) =>
+        //    {
+        //        OnCurrentPlayablePlayerTypeChanged?.Invoke(this, EventArgs.Empty);
+        //    };
+
+        //    playerCrossScore.OnValueChanged += (int prevScore, int newScore) =>
+        //    {
+        //        OnScoreChanged?.Invoke(this, EventArgs.Empty);
+        //    };
+        //    playerCircleScore.OnValueChanged += (int prevScore, int newScore) =>
+        //    {
+        //        OnScoreChanged?.Invoke(this, EventArgs.Empty);
+        //    };
+        //}
 
         private void NetworkManager_OnClientConnectedCallback(ulong obj = 1)
         {
@@ -197,8 +208,15 @@ namespace Games.TicTacToe
             {
                 // Start Game
                 currentPlayablePlayerType.Value = PlayerType.Cross;
-                TriggerOnGameStartedRpc();
+                //TriggerOnGameStartedRpc();
+                StartCoroutine(TriggerOnGameStartedNextFrame());
+                Debug.LogError($"NetworkManager_OnClientConnectedCallback , I am Host = {IsHost}");
             }
+        }
+        private IEnumerator TriggerOnGameStartedNextFrame()
+        {
+            yield return new WaitForSeconds(2);
+            TriggerOnGameStartedRpc();
         }
 
 
@@ -207,6 +225,8 @@ namespace Games.TicTacToe
         private void TriggerOnGameStartedRpc()
         {
             OnGameStarted?.Invoke(this, EventArgs.Empty);
+            Debug.LogError($"TriggerOnGameStartedRpc , I am Host = {IsHost}");
+
         }
 
         [Rpc(SendTo.Server)]
@@ -370,6 +390,68 @@ namespace Games.TicTacToe
             playerCrossScore = this.playerCrossScore.Value;
             playerCircleScore = this.playerCircleScore.Value;
         }
+
+        [ContextMenu("LeaveGame")]
+        public void LeaveGame()
+        {
+            if (IsHost)
+            {
+                HostLeaveGame();
+            }
+            else if (IsClient)
+            {
+                ClientLeaveGameServerRpc();
+                ShutdownAndReturnToLobby(); // Only for the client side
+            }
+        }
+
+        // ----- Host Leave -----
+        private void HostLeaveGame()
+        {
+            Debug.Log("Host is leaving the game (server remains active).");
+            NotifyClientHostLeftClientRpc();
+            LoadLobbySceneLocally();
+        }
+
+        [ClientRpc]
+        private void NotifyClientHostLeftClientRpc()
+        {
+            if (!IsHost)
+            {
+                Debug.LogWarning($"Host has left the game. ");
+                // Optional: Show popup
+                //GameOverUI.Instance?.ShowHostLeftMessage();
+                LoadLobbySceneLocally();
+            }
+        }
+
+        // ----- Client Leave -----
+        [ServerRpc(RequireOwnership = false)]
+        private void ClientLeaveGameServerRpc(ServerRpcParams rpcParams = default)
+        {
+            ulong clientId = rpcParams.Receive.SenderClientId;
+            Debug.Log($"Client {clientId} has left the game.");
+            // Optional: Handle server-side cleanup if needed
+
+            //Unload scene
+            //LoadLobbySceneLocally();
+
+        }
+
+        private void ShutdownAndReturnToLobby()
+        {
+            NetworkManager.Singleton.Shutdown();
+            LoadLobbySceneLocally();
+        }
+
+        // ----- Shared -----
+        private async void LoadLobbySceneLocally()
+        {
+            //show popup
+            await SceneManager.LoadSceneAsync("TicTacToeTestScene");
+            //close popup
+        }
+
 
     }
 }
