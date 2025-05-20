@@ -72,7 +72,9 @@ public class LobbySceneManager : MonoBehaviour
                 _gameView.Close();
 
                 LobbyManager.m_playerSelectedGame = gameType;
-                await LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame(true,gameType);
+                //await LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame(true,gameType);
+                await LobbyManager.Instance.UpdatePlayerData(gameType, GameRequestStatus.Pending);
+
                 _sceneView.SetInteractable(true);
             }
             else
@@ -86,16 +88,22 @@ public class LobbySceneManager : MonoBehaviour
         }
     }
 
+    [ContextMenu("Accept")]
     public async void OnAcceptButtonPressed()
     {
         _sceneView.SetInteractable(false);
-        await LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame(true,_gameType);
+        //await LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame(true,_gameType);
+        await LobbyManager.Instance.UpdatePlayerData(_gameType, GameRequestStatus.Accepted);
+
 
     }
+    [ContextMenu("Reject")]
+
     public async void OnRejectButtonPressed()
     {
         _sceneView.SetInteractable(false);
-        await LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame(false,GameType.None);
+        //await LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame(false,GameType.None);
+        await LobbyManager.Instance.UpdatePlayerData(GameType.None, GameRequestStatus.Declined);
         _sceneView.CloseLobbyPanel();
         
     }
