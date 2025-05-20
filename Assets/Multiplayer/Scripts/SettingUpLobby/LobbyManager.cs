@@ -110,7 +110,6 @@ public class LobbyManager : MonoBehaviour
 
                 if (Time.realtimeSinceStartup >= m_NextUpdatePlayersTime && !m_WasGameStarted)
                 {
-                    Debug.LogError("In updating lobby");
                     await PeriodicUpdateLobby();
                 }
             }
@@ -358,7 +357,6 @@ public class LobbyManager : MonoBehaviour
         //TestDebug(updatedLobby);
         if (DidPlayersChange(activeLobby.Players, updatedLobby.Players))
         {
-            Debug.LogError("In didplayerchange");
             activeLobby = updatedLobby;
             players = activeLobby?.Players;
             if (updatedLobby.Players.Exists(player => player.Id == playerId))

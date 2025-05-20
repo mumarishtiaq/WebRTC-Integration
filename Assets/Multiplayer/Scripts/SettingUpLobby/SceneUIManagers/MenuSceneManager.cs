@@ -173,7 +173,7 @@ public class MenuSceneManager : MonoBehaviour
     private async Task LoadLobbyScene()
     {
         LoadingManager.Instance.EnableLoading("Joining room");
-        await SceneManager.LoadSceneAsync("LobbyScene");
+        await SceneManagerCustom.LoadSceneAsync(SceneType.Lobby);
         LoadingManager.Instance.EnableLoading("Room Joined", true);
         //SpawnManager.Instance.SpawnRemotePlayer()
     }

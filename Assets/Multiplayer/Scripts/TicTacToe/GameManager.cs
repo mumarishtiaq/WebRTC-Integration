@@ -36,6 +36,7 @@ namespace Games.TicTacToe
         public event EventHandler OnScoreChanged;
         public event EventHandler OnPlacedObject;
 
+        private PeerData _peerData => MultiplayerManager.Instance.PeerData;
 
         public enum PlayerType
         {
@@ -134,6 +135,7 @@ namespace Games.TicTacToe
 
         private void Start()
         {
+            LobbyManager.OnGameStarted?.Invoke();
             Debug.Log("OnNetworkSpawn: " + NetworkManager.Singleton.LocalClientId);
             if (NetworkManager.Singleton.LocalClientId == 0)
             {
@@ -146,7 +148,6 @@ namespace Games.TicTacToe
 
             if (IsServer)
             {
-                //NetworkManager.Singleton.OnClientConnectedCallback += NetworkManager_OnClientConnectedCallback;
                 NetworkManager_OnClientConnectedCallback();
             }
 
@@ -166,51 +167,13 @@ namespace Games.TicTacToe
         }
 
 
-
-
-
-
-        //public override void OnNetworkSpawn()
-        //{
-        //    Debug.Log("OnNetworkSpawn: " + NetworkManager.Singleton.LocalClientId);
-        //    if (NetworkManager.Singleton.LocalClientId == 0)
-        //    {
-        //        localPlayerType = PlayerType.Cross;
-        //    }
-        //    else
-        //    {
-        //        localPlayerType = PlayerType.Circle;
-        //    }
-
-        //    if (IsServer)
-        //    {
-        //        NetworkManager.Singleton.OnClientConnectedCallback += NetworkManager_OnClientConnectedCallback;
-        //    }
-
-        //    currentPlayablePlayerType.OnValueChanged += (PlayerType oldPlayerType, PlayerType newPlayerType) =>
-        //    {
-        //        OnCurrentPlayablePlayerTypeChanged?.Invoke(this, EventArgs.Empty);
-        //    };
-
-        //    playerCrossScore.OnValueChanged += (int prevScore, int newScore) =>
-        //    {
-        //        OnScoreChanged?.Invoke(this, EventArgs.Empty);
-        //    };
-        //    playerCircleScore.OnValueChanged += (int prevScore, int newScore) =>
-        //    {
-        //        OnScoreChanged?.Invoke(this, EventArgs.Empty);
-        //    };
-        //}
-
         private void NetworkManager_OnClientConnectedCallback(ulong obj = 1)
         {
             if (NetworkManager.Singleton.ConnectedClientsList.Count == 2)
             {
                 // Start Game
                 currentPlayablePlayerType.Value = PlayerType.Cross;
-                //TriggerOnGameStartedRpc();
                 StartCoroutine(TriggerOnGameStartedNextFrame());
-                Debug.LogError($"NetworkManager_OnClientConnectedCallback , I am Host = {IsHost}");
             }
         }
         private IEnumerator TriggerOnGameStartedNextFrame()
@@ -225,7 +188,6 @@ namespace Games.TicTacToe
         private void TriggerOnGameStartedRpc()
         {
             OnGameStarted?.Invoke(this, EventArgs.Empty);
-            Debug.LogError($"TriggerOnGameStartedRpc , I am Host = {IsHost}");
 
         }
 
@@ -236,7 +198,6 @@ namespace Games.TicTacToe
 
             if (playerType != currentPlayablePlayerType.Value)
             {
-                Debug.Log("in");
                 return;
             }
 
@@ -391,6 +352,12 @@ namespace Games.TicTacToe
             playerCircleScore = this.playerCircleScore.Value;
         }
 
+        [Rpc(SendTo.ClientsAndHost)]
+        private void TriggerOnGameLeftByHostRpc()
+        {
+            OnRematch?.Invoke(this, EventArgs.Empty);
+        }
+
         [ContextMenu("LeaveGame")]
         public void LeaveGame()
         {
@@ -409,6 +376,7 @@ namespace Games.TicTacToe
         private void HostLeaveGame()
         {
             Debug.Log("Host is leaving the game (server remains active).");
+            TriggerOnGameLeftByHostRpc();
             NotifyClientHostLeftClientRpc();
             LoadLobbySceneLocally();
         }
@@ -419,9 +387,8 @@ namespace Games.TicTacToe
             if (!IsHost)
             {
                 Debug.LogWarning($"Host has left the game. ");
-                // Optional: Show popup
-                //GameOverUI.Instance?.ShowHostLeftMessage();
-                LoadLobbySceneLocally();
+                StartCoroutine(ShowOpponentLeftPopup());
+
             }
         }
 
@@ -431,25 +398,38 @@ namespace Games.TicTacToe
         {
             ulong clientId = rpcParams.Receive.SenderClientId;
             Debug.Log($"Client {clientId} has left the game.");
-            // Optional: Handle server-side cleanup if needed
+           
+            StartCoroutine(ShowOpponentLeftPopup());
 
-            //Unload scene
-            //LoadLobbySceneLocally();
 
         }
 
         private void ShutdownAndReturnToLobby()
         {
-            NetworkManager.Singleton.Shutdown();
+            if (NetworkServiceManager.Instance != null)
+                NetworkServiceManager.Instance.Uninitialize();
+
+            else
+                NetworkManager.Singleton.Shutdown();
+
+
             LoadLobbySceneLocally();
         }
 
         // ----- Shared -----
-        private async void LoadLobbySceneLocally()
+        private void LoadLobbySceneLocally()
         {
-            //show popup
-            await SceneManager.LoadSceneAsync("TicTacToeTestScene");
-            //close popup
+
+            SceneManagerCustom.LoadScene(SceneType.Lobby);
+           
+        }
+
+        private IEnumerator ShowOpponentLeftPopup()
+        {
+            GameOverUI.instance.OnLeft(_peerData == null ? "Opponent" : _peerData.RP.Name);
+            yield return new WaitForSeconds(3);
+
+            LoadLobbySceneLocally();
         }
 
 

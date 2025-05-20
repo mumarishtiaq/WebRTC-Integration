@@ -92,13 +92,9 @@ namespace Games.CoinRush
             return gameResultsData;
         }
 
-        public void ReturnToMainMenu()
-        {
-            SceneManager.LoadScene("ServerlessMultiplayerGameSample");
-        }
         public void ReturnToLobbyScene()
         {
-            SceneManager.LoadScene("LobbyScene");
+            SceneManagerCustom.LoadScene(SceneType.Lobby);
         }
 
         public void OnDestroy()

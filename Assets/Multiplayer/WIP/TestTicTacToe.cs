@@ -4,6 +4,10 @@ using UnityEngine.SceneManagement;
 
 public class TestTicTacToe : MonoBehaviour
 {
+    private void Start()
+    {
+            LoadingManager.Instance.DisableLoading();
+    }
     [ContextMenu("LoadScene")]
     private void LoadScene()
     {

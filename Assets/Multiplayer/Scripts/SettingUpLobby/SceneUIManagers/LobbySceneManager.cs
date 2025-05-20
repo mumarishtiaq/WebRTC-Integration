@@ -67,7 +67,6 @@ public class LobbySceneManager : MonoBehaviour
             if (Enum.TryParse<GameType>(gameName, true, out var gameType))
             {
                 string readableGameName = GetReadableGameName(gameName);
-                Debug.Log("Selected Game Type: " + readableGameName);
 
 
                 _gameView.Close();
@@ -118,18 +117,16 @@ public class LobbySceneManager : MonoBehaviour
 
         if (LobbyManager.Instance.isHost)
         {
-            var gameSceneName = GetSceneName(selectedGame);
+            var sceneType = GetSceneType(selectedGame);
 
-            if(gameSceneName != string.Empty)
+            if(sceneType != SceneType.None)
             {
-
-                //NetworkManager.Singleton.SceneManager.LoadScene(gameSceneName, LoadSceneMode.Single);
-                StartCoroutine(LoadSceneUntilClientConnects(gameSceneName));
+                StartCoroutine(LoadSceneUntilClientConnects(sceneType));
             }
 
             else
             {
-                Debug.LogWarning("In valid scene name");
+                Debug.LogWarning("In valid scene type");
             }
         }
         else
@@ -137,14 +134,7 @@ public class LobbySceneManager : MonoBehaviour
             JoinRelayAsClient();
         }
     }
-
-    [ContextMenu("GetClientsCount")]
-    private async void GetClientsCount()
-    {
-        Debug.Log($"Connected Clients {NetworkManager.Singleton.ConnectedClients.Count}");
-    } 
     
-    [ContextMenu("JoinRelay")]
     private async void JoinRelayAsClient()
     {
         if(!NetworkServiceManager.Instance.m_NetworkManagerInitialized)
@@ -155,51 +145,32 @@ public class LobbySceneManager : MonoBehaviour
         
     }
     
-    [ContextMenu("LoadScene")]
-    private  void LoadScene()
-    {
-        StartCoroutine(LoadSceneCouroutine());
-    }
-
-    private IEnumerator LoadSceneCouroutine()
+    private IEnumerator LoadSceneUntilClientConnects(SceneType sceneType)
     {
         yield return new WaitUntil(() => NetworkManager.Singleton.ConnectedClients.Count == 2);
-        NetworkManager.Singleton.SceneManager.LoadScene("CoinRushScene", LoadSceneMode.Single);
-    }
-
-    [ContextMenu("ToggleReadyState")]
-    private async void ToggleReadyState()
-    {
-        await LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame(false, GameType.None);
-        LobbyManager.m_WasGameStarted = false;
-    }
-
-    private IEnumerator LoadSceneUntilClientConnects(string gameSceneName)
-    {
-        yield return new WaitUntil(() => NetworkManager.Singleton.ConnectedClients.Count == 2);
-        NetworkManager.Singleton.SceneManager.LoadScene(gameSceneName, LoadSceneMode.Single);
+        SceneManagerCustom.LoadNetworkScene(sceneType);
     }
 
 
-    private string GetSceneName(GameType gameType)
+    private SceneType GetSceneType(GameType gameType)
     {
-        string gameSceneName = string.Empty;
+        var sceneType = SceneType.None;
         switch (gameType)
         {
             case GameType.Tic_Tac_Toe:
-                gameSceneName = "TicTacToeScene";
+                sceneType = SceneType.TicTacToe;
                 break;
             case GameType.Coin_Rush:
-                gameSceneName = "CoinRushScene";
+                sceneType = SceneType.CoinRush;
                 break;
             case GameType.Chess:
-                gameSceneName = "ChessScene";
+                sceneType = SceneType.ThirdGame;
                 break;
             default:
                 break;
         }
 
-        return gameSceneName;
+        return sceneType;
     }
    
     private string GetReadableGameName(string gameName)
@@ -212,8 +183,6 @@ public class LobbySceneManager : MonoBehaviour
         LobbyManager.OnGameReady -= OnGameReady;
         LobbyManager.OnGameRequestInitiated -= OnGameRequestInitiated;
         LobbyManager.OnGameRequestReceived -= OnGameRequestReceived;
-
-
     }
 
     

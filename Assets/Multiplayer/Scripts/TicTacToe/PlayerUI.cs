@@ -16,7 +16,6 @@ namespace Games.TicTacToe
         [SerializeField] private TextMeshProUGUI playerCrossScoreTextMesh;
         [SerializeField] private TextMeshProUGUI playerCircleScoreTextMesh;
 
-        public static PlayerUI Instance;
 
         private void Awake()
         {
@@ -28,7 +27,6 @@ namespace Games.TicTacToe
             playerCrossScoreTextMesh.text = "";
             playerCircleScoreTextMesh.text = "";
 
-            Instance = this;
         }
 
         private void Start()
@@ -54,7 +52,6 @@ namespace Games.TicTacToe
 
         public void GameManager_OnGameStarted(object sender, System.EventArgs e)
         {
-            Debug.LogError($"PlayerUI ,");
 
             if (GameManager.Instance.GetLocalPlayerType() == GameManager.PlayerType.Cross)
             {
@@ -83,6 +80,8 @@ namespace Games.TicTacToe
                 circleArrowGameObject.SetActive(true);
             }
         }
+
+        
 
     }
 }
