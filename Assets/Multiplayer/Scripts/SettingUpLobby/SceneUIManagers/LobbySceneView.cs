@@ -78,6 +78,34 @@ public class LobbySceneView : SceneViewBase
 
 
 
+    public void SetLobbyPanel(string gameName, bool isSendingRequest,string readyPlayerName = default)
+    {
+        //if (!_lobbyPanelView.IsPanelOpened)
+        {
+            //set button visiblity as per reqest sender and receiving roles
+           
+            _lobbyPanelView.SetButtonsVisiblity(isSendingRequest);
+
+            //Opening panel 
+            var title = isSendingRequest ? "You want to play":$"{readyPlayerName} wants to play" ;
+            _lobbyPanelView.OpenLobbyPanel(title,gameName);
+        }
+    }
+
+    public void UpdatePlayerIcons(List<Player> players)
+    {
+        _lobbyPanelView.SpawnPlayerIconsNew(players);
+    }
+
+    //public void UpdateReadyStates(List<Player> players)
+    //{
+    //    foreach (var p in players)
+    //    {
+    //        _lobbyPanelView.SetReadyState(p.Id);
+    //    }
+    //}
+
+
 
 
 

@@ -73,6 +73,25 @@ public class LobbyPanelView : MonoBehaviour
         }
 
         SequencePlayers(playerID);
+    } 
+    
+    internal void SpawnPlayerIconsNew(List<Player> players)
+    {
+        RemoveAllPlayers();
+        foreach (Player player in players) 
+        {
+            var playerIcon = GameObject.Instantiate(playerIconPrefab, playersContainer);
+
+            var playerId = player.Id;
+            var playerName = player.Id == LobbyManager.playerId  ? "You":player.Data[LobbyManager.k_PlayerNameKey].Value;
+            var isReady = bool.Parse(player.Data[LobbyManager.k_IsReadyKey].Value);
+
+            playerIcon.InitializeNew(playerId, playerName,isReady);
+
+            _playerIcons.Add(playerIcon);
+        }
+
+        //SequencePlayers(playerID);
     }
 
     internal void SetReadyState(string playerID, bool isReady)

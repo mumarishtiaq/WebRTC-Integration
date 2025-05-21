@@ -18,6 +18,12 @@ public class PlayerIconView : MonoBehaviour
     {
         this.playerId = playerId;
         _playerNameText.text = playerName;
+    } 
+    internal void InitializeNew(string playerId, string playerName, bool isReady)
+    {
+        this.playerId = playerId;
+        _playerNameText.text = playerName;
+        SetReady(isReady);
     }
 
     public void SetReady(bool isReady)

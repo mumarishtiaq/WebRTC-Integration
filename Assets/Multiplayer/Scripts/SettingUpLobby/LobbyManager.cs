@@ -17,6 +17,7 @@ public class LobbyManager : MonoBehaviour
 
     // Lobby data key used to check if each player has clicked the [Ready] button.
     public const string k_IsReadyKey = "isReady";
+    public const string k_IsDeclinedKey = "isDeclined";
     
     // Lobby data key used to get each player selected avatar index, will used to fetch remote player's selected avatar index.
     public const string k_PlayerAvatarIndexKey = "playerAvatarIndex";
@@ -45,6 +46,7 @@ public class LobbyManager : MonoBehaviour
     string m_PlayerName;
 
      bool m_IsPlayerReady = false;
+     bool m_IsDeclined = false;
 
      public static GameType m_playerSelectedGame  = GameType.None;
      public  GameRequestStatus m_gameRequestStatus  = GameRequestStatus.NotInitiated;
@@ -356,7 +358,7 @@ public class LobbyManager : MonoBehaviour
         if (activeLobby == null || updatedLobby == null) return;
 
         //Test(updatedLobby);
-        var isGameReady = IsGameReady(updatedLobby);
+        var isGameReady = AreAllPlayerReady(updatedLobby);
         //var isPlayerInitiateToPlayGame = IsPlayerInitiateToPlayGame(updatedLobby, out var readyPlayer);
         //Debug.Log($"Test isGame Ready {isGameReady}");
         //Debug.Log($"Test isPlayerInitiateToPlayGame {isPlayerInitiateToPlayGame}");
@@ -394,12 +396,68 @@ public class LobbyManager : MonoBehaviour
         //}
 
         //DetectPlayerReadyStates(updatedLobby);
-        TestNewApproach(updatedLobby);
+        //TestNewApproach(updatedLobby);
+        ModifiedOldApproach(updatedLobby);
 
     }
     public UnityEvent OnGameRequestReceivedNew;
     public UnityEvent OnGameRequestAcceptedByBoth;
     public UnityEvent OnGameRequestDeclined;
+
+
+    public static Action<List<Player>,bool> OnPlayersReadyStateChanged;
+
+    private void ModifiedOldApproach(Lobby updatedLobby)
+    {
+        if (updatedLobby.Players.Count <= 1)
+        {
+            return;
+        }
+
+        if(DidPlayerChangeReadyStates(activeLobby.Players,updatedLobby.Players) || DidPlayerDeclinedStateChanged(activeLobby.Players, updatedLobby.Players))
+        {
+            activeLobby = updatedLobby;
+            players = activeLobby?.Players;
+            if (updatedLobby.Players.Exists(player => player.Id == playerId))
+            {
+                var arePlayersReady = AreAllPlayerReady(updatedLobby);
+                var isSelectedGameMatched = DoPlayerSelectedGameMatched(updatedLobby.Players);
+
+                bool isGameReady = arePlayersReady && isSelectedGameMatched;
+                OnPlayersReadyStateChanged?.Invoke(players, isGameReady);
+            }
+        }
+
+    }
+
+  
+
+
+    private bool DidPlayerChangeReadyStates(List<Player> oldPlayers, List<Player> newPlayers)
+    {
+        for (int i = 0; i < newPlayers.Count; i++)
+        {
+            if (oldPlayers[i].Data[k_IsReadyKey].Value != newPlayers[i].Data[k_IsReadyKey].Value)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    } 
+    
+    private bool DidPlayerDeclinedStateChanged(List<Player> oldPlayers, List<Player> newPlayers)
+    {
+        for (int i = 0; i < newPlayers.Count; i++)
+        {
+            if (oldPlayers[i].Data[k_IsDeclinedKey].Value != newPlayers[i].Data[k_IsDeclinedKey].Value)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private void TestNewApproach(Lobby lobby)
     {
@@ -518,10 +576,6 @@ public class LobbyManager : MonoBehaviour
 
     private bool DoPlayerSelectedGameMatched(List<Player> players)
     {
-        if (players.Count <= 1)
-        {
-            return false;
-        }
         var remotePlayer = players.FirstOrDefault(p => p.Id != playerId);
         if (m_playerSelectedGame != GameType.None && m_playerSelectedGame == Enum.Parse<GameType>(remotePlayer.Data[k_SelectedGameKey].Value))
         {
@@ -540,7 +594,7 @@ public class LobbyManager : MonoBehaviour
         return player.Data[k_SelectedGameKey].Value;
     }
 
-    static bool IsGameReady(Lobby lobby)
+    static bool AreAllPlayerReady(Lobby lobby)
     {
         if (lobby.Players.Count <= 1)
         {
@@ -619,8 +673,9 @@ public class LobbyManager : MonoBehaviour
 
         for (int i = 0; i < newPlayers.Count; i++)
         {
-            if (oldPlayers[i].Id != newPlayers[i].Id ||
-                oldPlayers[i].Data[k_IsReadyKey].Value != newPlayers[i].Data[k_IsReadyKey].Value)
+            if (oldPlayers[i].Id != newPlayers[i].Id )
+                //||
+                //oldPlayers[i].Data[k_IsReadyKey].Value != newPlayers[i].Data[k_IsReadyKey].Value)
             {
                 return true;
             }
@@ -643,7 +698,7 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    public async Task ToggleReadyStateAndSetSelectedGame(bool isReady, GameType selectedGame)
+    public async Task ToggleReadyStateAndSetSelectedGame(bool isReady, GameType selectedGame,bool isDeclined)
     {
         try
         {
@@ -655,6 +710,7 @@ public class LobbyManager : MonoBehaviour
 
             m_IsPlayerReady = isReady;
             m_playerSelectedGame = selectedGame;
+            m_IsDeclined = isDeclined;
 
             var lobbyId = activeLobby.Id;
 
@@ -701,7 +757,9 @@ public class LobbyManager : MonoBehaviour
             
             { k_SelectedGameKey,  new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, m_playerSelectedGame.ToString()) },
             
-            { k_gameRequestStatusKey,  new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, m_gameRequestStatus.ToString()) }
+            { k_gameRequestStatusKey,  new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, m_gameRequestStatus.ToString()) } ,
+            
+            { k_IsDeclinedKey,  new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, m_IsDeclined.ToString()) }
             };
 
         return playerDictionary;
@@ -719,7 +777,7 @@ public class LobbyManager : MonoBehaviour
 
     private void OnAnyGameStarted()
     {
-        ToggleReadyStateAndSetSelectedGame(false, GameType.None);
+        ToggleReadyStateAndSetSelectedGame(false, GameType.None,false);
     }
 
 

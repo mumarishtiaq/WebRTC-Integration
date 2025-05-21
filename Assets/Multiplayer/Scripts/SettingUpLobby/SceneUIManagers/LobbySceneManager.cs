@@ -2,6 +2,7 @@ using Games.CoinRush;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Unity.Netcode;
 using Unity.Services.Authentication;
@@ -26,6 +27,9 @@ public class LobbySceneManager : MonoBehaviour
         LobbyManager.OnGameReady += OnGameReady;
         LobbyManager.OnGameRequestInitiated += OnGameRequestInitiated;
         LobbyManager.OnGameRequestReceived += OnGameRequestReceived;
+
+        LobbyManager.OnPlayersReadyStateChanged += OnPlayersReadyStateChangedNew;
+
 
         _sceneView.SetPlayerData(_peerData.LP.Name);
         _sceneView.SetRemotePlayerData(_peerData.RP.Name);
@@ -70,10 +74,8 @@ public class LobbySceneManager : MonoBehaviour
 
 
                 _gameView.Close();
-
-                LobbyManager.m_playerSelectedGame = gameType;
-                //await LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame(true,gameType);
-                await LobbyManager.Instance.UpdatePlayerData(gameType, GameRequestStatus.Pending);
+                await LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame(true, gameType,false);
+                //await LobbyManager.Instance.UpdatePlayerData(gameType, GameRequestStatus.Pending);
 
                 _sceneView.SetInteractable(true);
             }
@@ -92,8 +94,8 @@ public class LobbySceneManager : MonoBehaviour
     public async void OnAcceptButtonPressed()
     {
         _sceneView.SetInteractable(false);
-        //await LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame(true,_gameType);
-        await LobbyManager.Instance.UpdatePlayerData(_gameType, GameRequestStatus.Accepted);
+        await LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame(true, _gameType,false);
+        //await LobbyManager.Instance.UpdatePlayerData(_gameType, GameRequestStatus.Accepted);
 
 
     }
@@ -102,8 +104,8 @@ public class LobbySceneManager : MonoBehaviour
     public async void OnRejectButtonPressed()
     {
         _sceneView.SetInteractable(false);
-        //await LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame(false,GameType.None);
-        await LobbyManager.Instance.UpdatePlayerData(GameType.None, GameRequestStatus.Declined);
+        await LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame(false, GameType.None, true);
+        //await LobbyManager.Instance.UpdatePlayerData(GameType.None, GameRequestStatus.Declined);
         _sceneView.CloseLobbyPanel();
         
     }
@@ -191,7 +193,138 @@ public class LobbySceneManager : MonoBehaviour
         LobbyManager.OnGameReady -= OnGameReady;
         LobbyManager.OnGameRequestInitiated -= OnGameRequestInitiated;
         LobbyManager.OnGameRequestReceived -= OnGameRequestReceived;
+
+
+        LobbyManager.OnPlayersReadyStateChanged -= OnPlayersReadyStateChangedNew;
     }
 
-    
+
+    private void OnPlayersReadyStateChanged(List<Player> players, bool isGameReady)
+    {
+        _sceneView.UpdatePlayerIcons(players);
+        if (!isGameReady)
+        {
+            var localPlayer = new LobbyPlayerData(GetPlayerByID(players, LobbyManager.playerId));
+            var remotePlayer = new LobbyPlayerData(GetRemotePlayer(players));
+
+            var readyPlayer = GetReadyPlayer(players);
+
+            if (readyPlayer != null)
+            {
+                var readyPlayerSelectedGame = Enum.Parse<GameType>(readyPlayer.Data[LobbyManager.k_SelectedGameKey].Value);
+
+                string readableGameName = GetReadableGameName(readyPlayerSelectedGame.ToString());
+                bool isSendingRequest = readyPlayer.Id == LobbyManager.playerId;
+
+                if (isSendingRequest)
+                {
+                    Debug.Log($"You want to Play {readyPlayerSelectedGame}");
+                    _sceneView.SetLobbyPanel(readableGameName, isSendingRequest);
+                }
+                else
+                {
+                    _gameType = readyPlayerSelectedGame;
+                    string readyPlayerName = readyPlayer.Data[LobbyManager.k_PlayerNameKey].Value;
+                    Debug.Log($"{readyPlayerName} wants to Play {readyPlayerSelectedGame}");
+
+                    _sceneView.SetLobbyPanel(readableGameName, isSendingRequest, readyPlayerName);
+
+                }
+            }
+            //if the ready player us null this means that the player who sent game request has canceled the request becuause if no player is ready this means initiator has canceled as the initiator has by default ready state
+            else
+            {
+                var remotePlayerName = GetRemotePlayer(players).Data[LobbyManager.k_PlayerNameKey].Value;
+                Debug.Log($"{remotePlayerName} has canceled to play");
+
+            }
+        }
+        else
+        {
+            Debug.LogError("Game is Ready To start");
+
+            foreach (var player in players)
+            {
+                var name = player.Data[LobbyManager.k_PlayerNameKey].Value;
+                var isReady = bool.Parse(player.Data[LobbyManager.k_IsReadyKey].Value);
+                var game = player.Data[LobbyManager.k_SelectedGameKey].Value;
+
+                Debug.LogError($"{name} -- > IsReady = {isReady} --> Game = {game}");
+
+            }
+        }
+    }
+
+    private void OnPlayersReadyStateChangedNew(List<Player> players, bool isGameReady)
+    {
+        _sceneView.UpdatePlayerIcons(players);
+        if (!isGameReady)
+        {
+            var localPlayer = new LobbyPlayerData(GetPlayerByID(players, LobbyManager.playerId));
+            var remotePlayer = new LobbyPlayerData(GetRemotePlayer(players));
+
+            if (localPlayer.IsReady && !remotePlayer.IsReady && localPlayer.SelectedGame != GameType.None && remotePlayer.SelectedGame == GameType.None)
+            {
+                Debug.Log($"You Want to play {localPlayer.SelectedGame} my state = {localPlayer.IsReady} Another Player state = {remotePlayer.IsReady} , Remote Player Selected Game {remotePlayer.SelectedGame}");
+
+                string readableGameName = GetReadableGameName(localPlayer.SelectedGame.ToString());
+                _sceneView.SetLobbyPanel(readableGameName, true);
+
+            }
+        }
+        else
+        {
+            Debug.LogError("Game is Ready To start");
+
+            foreach (var player in players)
+            {
+                var name = player.Data[LobbyManager.k_PlayerNameKey].Value;
+                var isReady = bool.Parse(player.Data[LobbyManager.k_IsReadyKey].Value);
+                var game = player.Data[LobbyManager.k_SelectedGameKey].Value;
+
+                Debug.LogError($"{name} -- > IsReady = {isReady} --> Game = {game}");
+
+            }
+        }
+    }
+
+
+
+    private Player GetReadyPlayer(List<Player> players)
+    {
+        return players.FirstOrDefault(p => bool.Parse(p.Data[LobbyManager.k_IsReadyKey].Value) == true);
+    } 
+    private Player GetPlayerByID(List<Player> players, string id)
+    {
+        return players.FirstOrDefault(p => p.Id == id);
+    }
+    private Player GetRemotePlayer(List<Player> players)
+    {
+        return players.FirstOrDefault(p => p.Id != LobbyManager.playerId);
+    }
+
+  
+
+
 }
+
+
+
+public class LobbyPlayerData
+{
+    public string Id;
+    public string Name;
+    public bool IsReady = false;
+    public bool IsDeclined = false;
+    public GameType SelectedGame;
+
+    public LobbyPlayerData(Player player)
+    {
+        Id = player.Id;
+        Name = player.Data[LobbyManager.k_PlayerNameKey].Value;
+        IsReady = bool.Parse(player.Data[LobbyManager.k_IsReadyKey].Value);
+        IsDeclined = bool.Parse(player.Data[LobbyManager.k_IsDeclinedKey].Value);
+        SelectedGame = Enum.Parse<GameType>(player.Data[LobbyManager.k_SelectedGameKey].Value);
+    }
+}
+
