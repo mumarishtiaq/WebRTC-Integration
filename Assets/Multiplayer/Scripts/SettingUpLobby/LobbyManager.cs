@@ -406,6 +406,7 @@ public class LobbyManager : MonoBehaviour
 
 
     public static Action<List<Player>,bool> OnPlayersReadyStateChanged;
+    public static Action<List<Player>> OnPlayerDeclined;
 
     private void ModifiedOldApproach(Lobby updatedLobby)
     {
@@ -414,7 +415,7 @@ public class LobbyManager : MonoBehaviour
             return;
         }
 
-        if(DidPlayerChangeReadyStates(activeLobby.Players,updatedLobby.Players) || DidPlayerDeclinedStateChanged(activeLobby.Players, updatedLobby.Players))
+        if(DidPlayerChangeReadyStates(activeLobby.Players,updatedLobby.Players))
         {
             activeLobby = updatedLobby;
             players = activeLobby?.Players;
@@ -425,6 +426,16 @@ public class LobbyManager : MonoBehaviour
 
                 bool isGameReady = arePlayersReady && isSelectedGameMatched;
                 OnPlayersReadyStateChanged?.Invoke(players, isGameReady);
+            }
+        } 
+        
+        if(DidPlayerDeclinedStateChanged(activeLobby.Players, updatedLobby.Players))
+        {
+            activeLobby = updatedLobby;
+            players = activeLobby?.Players;
+            if (updatedLobby.Players.Exists(player => player.Id == playerId))
+            {
+                OnPlayerDeclined?.Invoke(players);
             }
         }
 

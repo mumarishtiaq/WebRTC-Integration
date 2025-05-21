@@ -1,6 +1,9 @@
+using DG.Tweening;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using TMPro;
 using Unity.Services.Lobbies.Models;
 using UnityEditor;
@@ -29,7 +32,13 @@ public class LobbyPanelView : MonoBehaviour
     Button _leaveBtn;
     
     [SerializeField]
-    GameObject _joiningObj;
+    GameObject _joiningObj; 
+    
+    [SerializeField]
+    Transform _declinedPopup;  
+    
+    [SerializeField]
+    TextMeshProUGUI _declinedPopupTxt;
 
     private List<PlayerIconView> _playerIcons = new List<PlayerIconView>();
 
@@ -92,6 +101,27 @@ public class LobbyPanelView : MonoBehaviour
         }
 
         //SequencePlayers(playerID);
+    }
+
+    public void ToggleDeclinedPopup(string msg = "", bool state = false)
+    {
+        _declinedPopupTxt.text = msg;
+
+        if(state)
+        {
+            _declinedPopup.DOScale(1, 0.25f);
+            StartCoroutine(DeclinePopupCloseDelay());
+        }
+
+        else
+            _declinedPopup.DOScale(0, 0);
+
+    }
+
+    private IEnumerator DeclinePopupCloseDelay()
+    {
+        yield return new WaitForSeconds(3f);
+        ToggleDeclinedPopup();
     }
 
     internal void SetReadyState(string playerID, bool isReady)

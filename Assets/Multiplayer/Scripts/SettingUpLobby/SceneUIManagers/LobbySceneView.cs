@@ -17,7 +17,10 @@ public class LobbySceneView : SceneViewBase
     LobbyPanelView _lobbyPanelView;
 
 
-
+    //private void Start()
+    //{
+    //    ToggleDeclinedPopup();
+    //}
     public void SetRemotePlayerData(string playerName)
     {
         remotePayerDataHolder.SetActive(true);
@@ -95,6 +98,11 @@ public class LobbySceneView : SceneViewBase
     public void UpdatePlayerIcons(List<Player> players)
     {
         _lobbyPanelView.SpawnPlayerIconsNew(players);
+    }
+
+    public void ToggleDeclinedPopup(string msg = "", bool state = false)
+    {
+        _lobbyPanelView.ToggleDeclinedPopup(msg, state);
     }
 
     //public void UpdateReadyStates(List<Player> players)

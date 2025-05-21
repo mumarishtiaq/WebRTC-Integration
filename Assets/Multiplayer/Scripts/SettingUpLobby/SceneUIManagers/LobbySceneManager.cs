@@ -29,6 +29,7 @@ public class LobbySceneManager : MonoBehaviour
         LobbyManager.OnGameRequestReceived += OnGameRequestReceived;
 
         LobbyManager.OnPlayersReadyStateChanged += OnPlayersReadyStateChangedNew;
+        LobbyManager.OnPlayerDeclined += OnPlayerDeclined;
 
 
         _sceneView.SetPlayerData(_peerData.LP.Name);
@@ -196,8 +197,11 @@ public class LobbySceneManager : MonoBehaviour
 
 
         LobbyManager.OnPlayersReadyStateChanged -= OnPlayersReadyStateChangedNew;
+        LobbyManager.OnPlayerDeclined -= OnPlayerDeclined;
+
     }
 
+  
 
     private void OnPlayersReadyStateChanged(List<Player> players, bool isGameReady)
     {
@@ -258,33 +262,92 @@ public class LobbySceneManager : MonoBehaviour
     private void OnPlayersReadyStateChangedNew(List<Player> players, bool isGameReady)
     {
         _sceneView.UpdatePlayerIcons(players);
-        if (!isGameReady)
-        {
+
             var localPlayer = new LobbyPlayerData(GetPlayerByID(players, LobbyManager.playerId));
             var remotePlayer = new LobbyPlayerData(GetRemotePlayer(players));
 
+        if (!isGameReady)
+        {
+
+           
+            //sending Game request
             if (localPlayer.IsReady && !remotePlayer.IsReady && localPlayer.SelectedGame != GameType.None && remotePlayer.SelectedGame == GameType.None)
             {
                 Debug.Log($"You Want to play {localPlayer.SelectedGame} my state = {localPlayer.IsReady} Another Player state = {remotePlayer.IsReady} , Remote Player Selected Game {remotePlayer.SelectedGame}");
 
                 string readableGameName = GetReadableGameName(localPlayer.SelectedGame.ToString());
                 _sceneView.SetLobbyPanel(readableGameName, true);
+                _sceneView.ToggleDeclinedPopup();
 
+            }
+
+            //receiving Game request
+
+            if (!localPlayer.IsReady && remotePlayer.IsReady && localPlayer.SelectedGame == GameType.None && remotePlayer.SelectedGame != GameType.None)
+            {
+                 LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame(false, GameType.None, false);
+
+                Debug.Log($"{remotePlayer.Name} Wants to play {localPlayer.SelectedGame} my state = {localPlayer.IsReady} Another Player state = {remotePlayer.IsReady} ");
+
+
+                _gameType = remotePlayer.SelectedGame;
+                string readableGameName = GetReadableGameName(remotePlayer.SelectedGame.ToString());
+
+                _sceneView.SetLobbyPanel(readableGameName, false, remotePlayer.Name);
+                _sceneView.ToggleDeclinedPopup();
+            }
+        }
+        //game is ready tp start
+        else
+        {
+            Debug.LogError("Game is Ready To start");
+            _sceneView.ToggleDeclinedPopup();
+            OnGameReadyToStart(remotePlayer.SelectedGame);
+        }
+    }
+
+    private void OnPlayerDeclined(List<Player> players)
+    {
+        var localPlayer = new LobbyPlayerData(GetPlayerByID(players, LobbyManager.playerId));
+        var remotePlayer = new LobbyPlayerData(GetRemotePlayer(players));
+        if (remotePlayer.IsDeclined)
+        {
+            _sceneView.ToggleDeclinedPopup($"{remotePlayer.Name} has canceled your request",true);
+            Debug.Log($"{remotePlayer.Name} has canceled my state = {localPlayer.IsReady} my game = {localPlayer.SelectedGame}");
+            _sceneView.CloseLobbyPanel();
+            LobbyManager.Instance.ToggleReadyStateAndSetSelectedGame(false, GameType.None, false);
+
+            return;
+
+        }
+    }
+
+    private void OnGameReadyToStart(GameType selectedGame)
+    {
+        _sceneView.SetReadyStates();
+        _sceneView.SetInteractable(false);
+        _sceneView.ShowJoining();
+        LobbyManager.m_WasGameStarted = true;
+
+
+
+        if (LobbyManager.Instance.isHost)
+        {
+            var sceneType = GetSceneType(selectedGame);
+
+            if (sceneType != SceneType.None)
+            {
+                StartCoroutine(LoadSceneUntilClientConnects(sceneType));
+            }
+
+            else
+            {
+                Debug.LogWarning("In valid scene type");
             }
         }
         else
         {
-            Debug.LogError("Game is Ready To start");
-
-            foreach (var player in players)
-            {
-                var name = player.Data[LobbyManager.k_PlayerNameKey].Value;
-                var isReady = bool.Parse(player.Data[LobbyManager.k_IsReadyKey].Value);
-                var game = player.Data[LobbyManager.k_SelectedGameKey].Value;
-
-                Debug.LogError($"{name} -- > IsReady = {isReady} --> Game = {game}");
-
-            }
+            JoinRelayAsClient();
         }
     }
 
