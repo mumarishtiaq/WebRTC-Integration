@@ -17,6 +17,9 @@ namespace Games.CoinRush
         //[SerializeField]
         TextMeshProUGUI personalStatsText;
 
+        [SerializeField]
+        GameObject panel;
+
         public void ShowResults(GameResultsData results)
         {
             ShowWinner(results);
@@ -24,6 +27,16 @@ namespace Games.CoinRush
             ShowSessionScores(results);
 
             //ShowPersonalStats();
+        }
+
+        public void Show()
+        {
+            panel.SetActive(true);
+        } 
+        
+        public void hide()
+        {
+            panel.SetActive(false);
         }
 
         void ShowWinner(GameResultsData results)

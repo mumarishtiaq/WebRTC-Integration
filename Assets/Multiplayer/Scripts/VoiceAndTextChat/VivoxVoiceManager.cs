@@ -50,7 +50,7 @@ public class VivoxVoiceManager : MonoBehaviour
         catch (Exception ex)
         {
             Debug.LogWarning(ex); //TODO}
-
+            isInitializeAndLoggedIn = false;
         }
     }
 

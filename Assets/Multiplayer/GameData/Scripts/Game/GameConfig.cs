@@ -5,7 +5,7 @@ namespace Games.CoinRush
     public static class GameConfig
     {
         public const int players = 2;
-        public const float gameDuration = 10;
+        public const float gameDuration = 60;
         public const float initialSpawnDelay = 1;
         public const float spawnInterval = 5;
         public const float destroyInterval = 6;

@@ -135,7 +135,7 @@ namespace Games.TicTacToe
 
         private void Start()
         {
-            LobbyManager.OnGameStarted?.Invoke();
+            LobbyManager.Instance.OnGameStarted?.Invoke();
             Debug.Log("OnNetworkSpawn: " + NetworkManager.Singleton.LocalClientId);
             if (NetworkManager.Singleton.LocalClientId == 0)
             {

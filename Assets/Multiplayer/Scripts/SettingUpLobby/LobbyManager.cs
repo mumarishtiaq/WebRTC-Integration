@@ -64,7 +64,7 @@ public class LobbyManager : MonoBehaviour
     public static event Action<Player, GameType> OnGameRequestReceived;
 
     //on game started will invoke when any game started , and it will set ready state to false and gametype to None
-    public static Action OnGameStarted;
+    public  UnityEvent OnGameStarted;
 
 
 
@@ -97,7 +97,7 @@ public class LobbyManager : MonoBehaviour
     }
     private void Start()
     {
-        OnGameStarted += OnAnyGameStarted;
+        OnGameStarted.AddListener(OnAnyGameStarted);
     }
 
     async void Update()
@@ -348,6 +348,7 @@ public class LobbyManager : MonoBehaviour
 
     void UpdateLobby(Lobby updatedLobby)
     {
+        Debug.LogError("m_WasGameStarted : " + m_WasGameStarted);
         if(m_WasGameStarted)
         {
             activeLobby = updatedLobby;
@@ -512,7 +513,7 @@ public class LobbyManager : MonoBehaviour
     {
         foreach (var player in players)
         {
-            Debug.LogError($"{player.Data[k_PlayerNameKey].Value} ---> {player.Data[k_SelectedGameKey].Value}, {player.Data[k_gameRequestStatusKey].Value}");
+            Debug.LogError($"{player.Data[k_PlayerNameKey].Value} ---> {player.Data[k_SelectedGameKey].Value},Ready = {player.Data[k_IsReadyKey].Value} , Declined = {player.Data[k_IsDeclinedKey].Value}");
         }
         
     }
@@ -711,6 +712,7 @@ public class LobbyManager : MonoBehaviour
 
     public async Task ToggleReadyStateAndSetSelectedGame(bool isReady, GameType selectedGame,bool isDeclined)
     {
+        Debug.LogError($"ToggleReady state -->Ready {isReady} , game {selectedGame} , isDeclined {isDeclined}");
         try
         {
             if (activeLobby == null)
@@ -786,8 +788,11 @@ public class LobbyManager : MonoBehaviour
         return player[k_PlayerNameKey].Value;
     }
 
+
+
     private void OnAnyGameStarted()
     {
+        Debug.LogError("On any game started");
         ToggleReadyStateAndSetSelectedGame(false, GameType.None,false);
     }
 
@@ -799,7 +804,8 @@ public class LobbyManager : MonoBehaviour
             Instance = null;
         }
 
-        OnGameStarted -= OnAnyGameStarted;
+        OnGameStarted.RemoveListener(OnAnyGameStarted);
+
     }
 
     #region Debugging

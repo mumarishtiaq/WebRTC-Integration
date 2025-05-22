@@ -9,7 +9,7 @@ namespace Games.CoinRush
     {
         [field: SerializeField]
         public ArenaUIOverlayPanelView arenaUiOverlayPanelView { get; private set; }
-        public GameResultsPanelView gameResultPanelView { get; private set; }
+        public GameResultsPanelView gameResultPanelView ;
 
         public void ShowArenaPanel()
         {
@@ -24,7 +24,10 @@ namespace Games.CoinRush
 
         public void ShowGameResults(GameResultsData results)
         {
-
+            gameResultPanelView.Show();
+            gameResultPanelView.ShowResults(results);
         }
+
+
     }
 }

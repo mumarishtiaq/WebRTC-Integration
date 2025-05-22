@@ -1,8 +1,6 @@
 using DG.Tweening;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.MaterialProperty;
 
 public class LoadingAnimationDot : MonoBehaviour
 {

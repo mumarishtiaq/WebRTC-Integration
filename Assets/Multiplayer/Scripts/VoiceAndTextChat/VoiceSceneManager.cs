@@ -35,16 +35,16 @@ public class VoiceSceneManager : MonoBehaviour
                 await VivoxVoiceManager.Instance.JoinVoiceChannel(_peerData.CommonRoomName);
             }
         }
-            
 
-        
+
+
 
 
         //if (IsMicPermissionGranted())
-        {
-            // The user authorized use of the microphone.
-            //await InitializationAndJoinChannelTest();
-        }
+        //{
+        //    //The user authorized use of the microphone.
+        //   await InitializationAndJoinChannelTest();
+        //}
         //else
         //{
         //    // We do not have the needed permissions.

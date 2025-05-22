@@ -1,17 +1,10 @@
-using Games.CoinRush;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using Unity.Netcode;
-using Unity.Services.Authentication;
 using Unity.Services.Lobbies.Models;
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class LobbySceneManager : MonoBehaviour
 {
@@ -311,7 +304,7 @@ public class LobbySceneManager : MonoBehaviour
     {
         var localPlayer = new LobbyPlayerData(GetPlayerByID(players, LobbyManager.playerId));
         var remotePlayer = new LobbyPlayerData(GetRemotePlayer(players));
-        if (remotePlayer.IsDeclined)
+        if (remotePlayer.IsDeclined && !localPlayer.IsDeclined)
         {
             _sceneView.ToggleDeclinedPopup($"{remotePlayer.Name} has canceled your request",true);
             Debug.Log($"{remotePlayer.Name} has canceled my state = {localPlayer.IsReady} my game = {localPlayer.SelectedGame}");

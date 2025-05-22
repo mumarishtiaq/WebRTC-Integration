@@ -36,7 +36,7 @@ namespace Games.CoinRush
 
         void Start()
         {
-            LobbyManager.OnGameStarted?.Invoke();
+            LobbyManager.Instance.OnGameStarted?.Invoke();
 
             if (MultiplayerManager.Instance == null)
             {
@@ -122,6 +122,14 @@ namespace Games.CoinRush
 
             sceneView.ShowGameResults(results);
 
+            if (!LobbyManager.Instance.isHost)
+                NetworkServiceManager.Instance.Uninitialize();
+
+        }
+
+        public  void OnGameResultPanelLeaveButtonPressed()
+        {
+            GameEndManager.instance.ReturnToLobbyScene();
         }
 
         public void OnGameLeaveButtonPressed()
