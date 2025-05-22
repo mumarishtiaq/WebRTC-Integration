@@ -26,6 +26,7 @@ namespace Games.CoinRush
 
         public void HostGameOver()
         {
+            Debug.Log("Host Game Over");
             var gameResultsData = CompileScores();
 
             gameResultsData = DetermineWinner(gameResultsData);

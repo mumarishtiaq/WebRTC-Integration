@@ -60,10 +60,14 @@ namespace Games.CoinRush
                 if (variableJoystick == null)
                     variableJoystick = FindAnyObjectByType<FixedJoystick>();
 
-                Vector3 acceleration = new Vector3(variableJoystick.Horizontal, 0, variableJoystick.Vertical);
-                acceleration *= Time.deltaTime * m_Acceleration;
+                if(variableJoystick !=null)
+                {
+                    Vector3 acceleration = new Vector3(variableJoystick.Horizontal, 0, variableJoystick.Vertical);
+                    acceleration *= Time.deltaTime * m_Acceleration;
 
-                m_RigidBody.AddForce(acceleration, ForceMode.VelocityChange);
+                    m_RigidBody.AddForce(acceleration, ForceMode.VelocityChange);
+                }
+               
             }
 
         }

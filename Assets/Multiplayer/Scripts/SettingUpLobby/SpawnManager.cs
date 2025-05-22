@@ -43,6 +43,10 @@ public class SpawnManager : MonoBehaviour
             Instance = this;
         }
     }
+    private void Start()
+    {
+        LobbyManager.OnGameStarted = () => TogglePlayersVisiblity();
+    }
 
     public void SpawnLocalPlayer(PlayerGender gender)
     {
@@ -147,6 +151,15 @@ public class SpawnManager : MonoBehaviour
         {
             Instance = null;
         }
+    }
+
+    public void TogglePlayersVisiblity(bool state = false)
+    {
+        if(LocalPlayerAvatar)
+            LocalPlayerAvatar.gameObject.SetActive(state);  
+        
+        if(RemotePlayerAvatar)
+            RemotePlayerAvatar.gameObject.SetActive(state);
     }
 
 }

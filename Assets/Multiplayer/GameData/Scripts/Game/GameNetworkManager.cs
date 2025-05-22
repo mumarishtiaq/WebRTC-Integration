@@ -328,6 +328,7 @@ namespace Games.CoinRush
         [ClientRpc]
         void GameOverClientRpc(string gameResultsJson)
         {
+            Debug.Log("Game over client RPC");
             m_IsShuttingDown = true;
 
             GameSceneManager.instance?.ShowGameTimer(0);
@@ -351,7 +352,8 @@ namespace Games.CoinRush
                 // Load the main menu. Note that this will cause the host and all clients to change scenes
                 // which will automatically cause this GameManager to be destroyed (including all mirrored
                 // Network Objects on all clients).
-                SceneManagerCustom.LoadNetworkScene(SceneType.Lobby);
+                Debug.Log("GameOverAcknowledgedServerRpc");
+                //SceneManagerCustom.LoadNetworkScene(SceneType.Lobby);
             }
         }
 

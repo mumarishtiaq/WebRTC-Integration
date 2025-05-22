@@ -36,6 +36,8 @@ namespace Games.CoinRush
 
         void Start()
         {
+            LobbyManager.OnGameStarted?.Invoke();
+
             if (MultiplayerManager.Instance == null)
             {
                 Debug.LogError("Please be sure to start Play mode on the MainMenu scene.");
@@ -59,7 +61,6 @@ namespace Games.CoinRush
             // to all clients, call method to ensure all scores are updated so players list will be visible from start.
             UpdateScores();
 
-             LobbyManager.OnGameStarted?.Invoke();
 
         }
 
@@ -117,6 +118,10 @@ namespace Games.CoinRush
 
             //TODO GameResults
             //ServerlessMultiplayerGameSampleManager.instance.SetPreviousGameResults(results);
+            Debug.LogError("Game scene Manager OnGameOver");
+
+            sceneView.ShowGameResults(results);
+
         }
 
         public void OnGameLeaveButtonPressed()

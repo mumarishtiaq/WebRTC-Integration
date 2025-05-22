@@ -35,6 +35,7 @@ public class LobbySceneManager : MonoBehaviour
         _sceneView.SetPlayerData(_peerData.LP.Name);
         _sceneView.SetRemotePlayerData(_peerData.RP.Name);
 
+        SpawnManager.Instance.TogglePlayersVisiblity(true);
 
         SpawnManager.Instance.SpawnRemotePlayer(LobbyManager.Instance.GetRemotePlayerAvatarIndex(), _peerData.RP.Gender);
         SpawnManager.Instance.SetTransform_LocalPlayer();
