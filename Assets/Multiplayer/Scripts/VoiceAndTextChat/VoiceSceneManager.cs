@@ -35,30 +35,6 @@ public class VoiceSceneManager : MonoBehaviour
                 await VivoxVoiceManager.Instance.JoinVoiceChannel(_peerData.CommonRoomName);
             }
         }
-
-
-
-
-
-        //if (IsMicPermissionGranted())
-        //{
-        //    //The user authorized use of the microphone.
-        //   await InitializationAndJoinChannelTest();
-        //}
-        //else
-        //{
-        //    // We do not have the needed permissions.
-        //    // Ask for permissions or proceed without the functionality enabled if they were denied by the user
-        //    if (IsPermissionsDenied())
-        //    {
-        //        m_PermissionAskedCount = 0;
-        //        await InitializationAndJoinChannelTest();
-        //    }
-        //    else
-        //    {
-        //        AskForPermissions();
-        //    }
-        //}
     }
    
     private void Start()
@@ -214,77 +190,6 @@ public class VoiceSceneManager : MonoBehaviour
 
 
     }
-    #region Permissions
-
-    int m_PermissionAskedCount;
-
-
-#if (UNITY_ANDROID && !UNITY_EDITOR) || __ANDROID__
-    bool IsAndroid12AndUp()
-    {
-        // android12VersionCode is hardcoded because it might not be available in all versions of Android SDK
-        const int android12VersionCode = 31;
-        AndroidJavaClass buildVersionClass = new AndroidJavaClass("android.os.Build$VERSION");
-        int buildSdkVersion = buildVersionClass.GetStatic<int>("SDK_INT");
-
-        return buildSdkVersion >= android12VersionCode;
-    }
-
-    string GetBluetoothConnectPermissionCode()
-    {
-        if (IsAndroid12AndUp())
-        {
-            // UnityEngine.Android.Permission does not contain the BLUETOOTH_CONNECT permission, fetch it from Android
-            AndroidJavaClass manifestPermissionClass = new AndroidJavaClass("android.Manifest$permission");
-            string permissionCode = manifestPermissionClass.GetStatic<string>("BLUETOOTH_CONNECT");
-
-            return permissionCode;
-        }
-
-        return "";
-    }
-#endif
-
-    bool IsMicPermissionGranted()
-    {
-        bool isGranted = Permission.HasUserAuthorizedPermission(Permission.Microphone);
-#if (UNITY_ANDROID && !UNITY_EDITOR) || __ANDROID__
-        if (IsAndroid12AndUp())
-        {
-            // On Android 12 and up, we also need to ask for the BLUETOOTH_CONNECT permission for all features to work
-            isGranted &= Permission.HasUserAuthorizedPermission(GetBluetoothConnectPermissionCode());
-        }
-#endif
-        return isGranted;
-    }
-
-    void AskForPermissions()
-    {
-        string permissionCode = Permission.Microphone;
-
-#if (UNITY_ANDROID && !UNITY_EDITOR) || __ANDROID__
-        if (m_PermissionAskedCount == 1 && IsAndroid12AndUp())
-        {
-            permissionCode = GetBluetoothConnectPermissionCode();
-        }
-#endif
-        m_PermissionAskedCount++;
-        Permission.RequestUserPermission(permissionCode);
-    }
-
-    bool IsPermissionsDenied()
-    {
-#if (UNITY_ANDROID && !UNITY_EDITOR) || __ANDROID__
-        // On Android 12 and up, we also need to ask for the BLUETOOTH_CONNECT permission
-        if (IsAndroid12AndUp())
-        {
-            return m_PermissionAskedCount == 2;
-        }
-#endif
-        return m_PermissionAskedCount == 1;
-    }
-
-
-    #endregion 
+  
 
 }

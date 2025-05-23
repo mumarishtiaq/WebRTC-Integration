@@ -152,7 +152,7 @@ public class SpawnManager : MonoBehaviour
         {
             Instance = null;
         }
-        LobbyManager.Instance.OnGameStarted.RemoveListener(() => TogglePlayersVisiblity());
+        //LobbyManager.Instance.OnGameStarted.RemoveListener(() => TogglePlayersVisiblity());
 
     }
 

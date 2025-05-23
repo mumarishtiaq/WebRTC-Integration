@@ -5,10 +5,19 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
+    serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1558423788213929406, guid: 8ce52628da318b4498032041e2a69b4b, type: 3}
+      propertyPath: nameTxtColor.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1558423788213929406, guid: 8ce52628da318b4498032041e2a69b4b, type: 3}
+      propertyPath: nameTxtColor.g
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5426568655217808528, guid: 8ce52628da318b4498032041e2a69b4b, type: 3}
-      propertyPath: m_Materials.Array.data[0]
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 2ab2687e7b66e2146b6ec6cd669c6f91, type: 2}
     - target: {fileID: 5426568655217808530, guid: 8ce52628da318b4498032041e2a69b4b, type: 3}
@@ -61,7 +70,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6836439567923547795, guid: 8ce52628da318b4498032041e2a69b4b, type: 3}
       propertyPath: GlobalObjectIdHash
-      value: 951099334
+      value: 570782164
       objectReference: {fileID: 0}
     m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8ce52628da318b4498032041e2a69b4b, type: 3}

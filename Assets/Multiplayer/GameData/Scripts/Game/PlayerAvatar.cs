@@ -1,3 +1,4 @@
+using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -26,6 +27,9 @@ namespace Games.CoinRush
         public ulong playerRelayId { get; private set; }
 
         public int score { get; private set; }
+
+        [SerializeField] private Color nameTxtColor;
+        [SerializeField] private TextMeshPro nameTxt;
 
         // During countdown, the player is not allowed to move so this is checked and inputs are ignored until the game begins.
         bool m_IsMovementAllowed = false;
@@ -70,6 +74,7 @@ namespace Games.CoinRush
                
             }
 
+
         }
 
         [ClientRpc]
@@ -85,6 +90,10 @@ namespace Games.CoinRush
             GameNetworkManager.instance?.AddPlayerAvatar(this, IsOwner);
 
             Debug.Log($"Set player avatar for player #{playerIndex}: id:'{playerId}' name:'{playerName}' relay:{relayClientId}");
+
+            nameTxt.color = nameTxtColor;
+            string txt = IsOwner ? "You" : playerName;
+            nameTxt.text = txt;
         }
 
         public void AllowMovement()

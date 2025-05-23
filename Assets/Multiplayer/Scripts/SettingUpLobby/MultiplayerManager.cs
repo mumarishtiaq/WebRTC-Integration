@@ -18,7 +18,7 @@ public class MultiplayerManager : MonoBehaviour
     public bool isInitialized { get; private set; }
 
 
-    private async void Awake()
+    private void Awake()
     {
         if (Instance != null && Instance != this)
         {
@@ -28,6 +28,8 @@ public class MultiplayerManager : MonoBehaviour
         {
             Instance = this;
         }
+
+        Application.targetFrameRate = 60;
     }
     async void Start()
     {
@@ -74,8 +76,13 @@ public class MultiplayerManager : MonoBehaviour
             //Initialize and sign in to vivox service
             isInitialized = true;
 
-            if(isInitialized)
-                await VivoxVoiceManager.Instance.InitializeAndSignInVivox(PeerData.LP.Name);
+            if (isInitialized)
+            {
+
+                //await VivoxVoiceManager.Instance.InitializeAndSignInVivox(PeerData.LP.Name);
+                await VivoxVoiceManager.Instance.SignInWithPermissions(PeerData.LP.Name);
+            }
+
 
 
 

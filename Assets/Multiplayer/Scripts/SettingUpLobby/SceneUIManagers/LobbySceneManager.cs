@@ -16,7 +16,6 @@ public class LobbySceneManager : MonoBehaviour
 
     async void Start()
     {
-
         LobbyManager.OnGameReady += OnGameReady;
         LobbyManager.OnGameRequestInitiated += OnGameRequestInitiated;
         LobbyManager.OnGameRequestReceived += OnGameRequestReceived;

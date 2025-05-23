@@ -5,6 +5,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
+    serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 2525434858837904099, guid: 662cef63fdf9b554daa036078f87b247, type: 3}
@@ -12,7 +13,7 @@ PrefabInstance:
       value: Player 2 Avatar Variant
       objectReference: {fileID: 0}
     - target: {fileID: 2525434858837904101, guid: 662cef63fdf9b554daa036078f87b247, type: 3}
-      propertyPath: m_Materials.Array.data[0]
+      propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 636e17a91574e4b419b55759984babf1, type: 2}
     - target: {fileID: 2525434858837904103, guid: 662cef63fdf9b554daa036078f87b247, type: 3}
@@ -61,7 +62,22 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3935239524927983846, guid: 662cef63fdf9b554daa036078f87b247, type: 3}
       propertyPath: GlobalObjectIdHash
-      value: 951099334
+      value: 3526726208
+      objectReference: {fileID: 0}
+    - target: {fileID: 9071248842827520971, guid: 662cef63fdf9b554daa036078f87b247, type: 3}
+      propertyPath: nameTxtColor.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9071248842827520971, guid: 662cef63fdf9b554daa036078f87b247, type: 3}
+      propertyPath: nameTxtColor.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9071248842827520971, guid: 662cef63fdf9b554daa036078f87b247, type: 3}
+      propertyPath: nameTxtColor.r
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 662cef63fdf9b554daa036078f87b247, type: 3}
