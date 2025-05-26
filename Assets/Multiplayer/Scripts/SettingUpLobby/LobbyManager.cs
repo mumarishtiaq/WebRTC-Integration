@@ -25,8 +25,6 @@ public class LobbyManager : MonoBehaviour
     // Lobby data key used to get each player selected game , will used to fetch remote player's selected game.
     public const string k_SelectedGameKey = "playerSelectedGame";
 
-    public const string k_gameRequestStatusKey = "gameRequestStatus";
-
     public bool isHost { get; private set; }
 
     // Lobby data for host name.
@@ -49,8 +47,6 @@ public class LobbyManager : MonoBehaviour
      bool m_IsDeclined = false;
 
      public static GameType m_playerSelectedGame  = GameType.None;
-     public  GameRequestStatus m_gameRequestStatus  = GameRequestStatus.NotInitiated;
-
     public static bool m_WasGameStarted = false;
 
     float m_NextHostHeartbeatTime;
@@ -58,13 +54,11 @@ public class LobbyManager : MonoBehaviour
     float m_NextUpdatePlayersTime;
 
     public static event Action<Lobby> OnLobbyChanged;
-    public static event Action<List<Player>,GameType> OnGameReady;
-    public static event Action<Player,string> OnPlayerInitiateToPlayGame;
-    public static event Action<string, GameType> OnGameRequestInitiated;
-    public static event Action<Player, GameType> OnGameRequestReceived;
+
 
     //on game started will invoke when any game started , and it will set ready state to false and gametype to None
-    public  UnityEvent OnGameStarted;
+    [HideInInspector]
+    public UnityEvent OnGameStarted;
 
 
 
@@ -83,6 +77,9 @@ public class LobbyManager : MonoBehaviour
     public Lobby activeLobby { get; private set; }
 
     public static event Action OnPlayerNotInLobbyEvent;
+
+    public static Action<List<Player>, bool> OnPlayersReadyStateChanged;
+    public static Action<List<Player>> OnPlayerDeclined;
 
     void Awake()
     {
@@ -348,7 +345,6 @@ public class LobbyManager : MonoBehaviour
 
     void UpdateLobby(Lobby updatedLobby)
     {
-        Debug.LogError("m_WasGameStarted : " + m_WasGameStarted);
         if(m_WasGameStarted)
         {
             activeLobby = updatedLobby;
@@ -358,58 +354,24 @@ public class LobbyManager : MonoBehaviour
         // Since this is called after an await, ensure that the Lobby wasn't closed while waiting.
         if (activeLobby == null || updatedLobby == null) return;
 
-        //Test(updatedLobby);
-        var isGameReady = AreAllPlayerReady(updatedLobby);
-        //var isPlayerInitiateToPlayGame = IsPlayerInitiateToPlayGame(updatedLobby, out var readyPlayer);
-        //Debug.Log($"Test isGame Ready {isGameReady}");
-        //Debug.Log($"Test isPlayerInitiateToPlayGame {isPlayerInitiateToPlayGame}");
-        //TestDebug(updatedLobby);
         if (DidPlayersChange(activeLobby.Players, updatedLobby.Players))
         {
             activeLobby = updatedLobby;
             players = activeLobby?.Players;
             if (updatedLobby.Players.Exists(player => player.Id == playerId))
-            {
                 OnLobbyChanged?.Invoke(updatedLobby);
-            }
 
             else
                 OnPlayerNotInLobby();
         }
 
-        //if (isGameReady)
-        //{
-        //    if (DoPlayerSelectedGameMatched(updatedLobby.Players))
-        //    {
-        //        activeLobby = updatedLobby;
-        //        players = activeLobby?.Players;
-        //        if (updatedLobby.Players.Exists(player => player.Id == playerId))
-        //        {
-        //            OnGameReady?.Invoke(players,m_playerSelectedGame);
-        //            return;
-        //        }
-        //        else
-        //        {
-        //            OnPlayerNotInLobby();
-
-        //        }
-        //    }
-        //}
-
-        //DetectPlayerReadyStates(updatedLobby);
-        //TestNewApproach(updatedLobby);
-        ModifiedOldApproach(updatedLobby);
-
+        DetectPlayerChallengedOrDeclined(updatedLobby);
     }
-    public UnityEvent OnGameRequestReceivedNew;
-    public UnityEvent OnGameRequestAcceptedByBoth;
-    public UnityEvent OnGameRequestDeclined;
+   
 
+    
 
-    public static Action<List<Player>,bool> OnPlayersReadyStateChanged;
-    public static Action<List<Player>> OnPlayerDeclined;
-
-    private void ModifiedOldApproach(Lobby updatedLobby)
+    private void DetectPlayerChallengedOrDeclined(Lobby updatedLobby)
     {
         if (updatedLobby.Players.Count <= 1)
         {
@@ -442,9 +404,6 @@ public class LobbyManager : MonoBehaviour
 
     }
 
-  
-
-
     private bool DidPlayerChangeReadyStates(List<Player> oldPlayers, List<Player> newPlayers)
     {
         for (int i = 0; i < newPlayers.Count; i++)
@@ -471,121 +430,6 @@ public class LobbyManager : MonoBehaviour
         return false;
     }
 
-    private void TestNewApproach(Lobby lobby)
-    {
-        if (lobby.Players.Count <= 1)
-        {
-            return;
-        }
-
-
-        var remotePlayer = lobby.Players.FirstOrDefault(p => p.Id != playerId);
-
-        var remotePlayerRequestStatus = Enum.Parse<GameRequestStatus>(remotePlayer.Data[k_gameRequestStatusKey].Value);
-
-        if (m_gameRequestStatus == GameRequestStatus.NotInitiated && remotePlayerRequestStatus == GameRequestStatus.NotInitiated) return;
-
-        activeLobby = lobby;
-        players = activeLobby?.Players;
-
-        var remotePlayerSelectedGame = Enum.Parse<GameType>(remotePlayer.Data[k_SelectedGameKey].Value);
-
-
-        if(remotePlayerRequestStatus == GameRequestStatus.Pending)
-        {
-            Debug.Log($"Receiving request ----Remote Player wants to play {remotePlayerSelectedGame} its status is {remotePlayerRequestStatus}");
-        }
-
-        if(m_gameRequestStatus == GameRequestStatus.Accepted && remotePlayerRequestStatus == GameRequestStatus.Accepted && m_playerSelectedGame == remotePlayerSelectedGame)
-        {
-            Debug.Log($"Game is ready to start ----Game will be played {m_playerSelectedGame} , I am {m_gameRequestStatus} , remote player is {remotePlayerRequestStatus}");
-        }
-
-        if(remotePlayerRequestStatus == GameRequestStatus.Declined)
-        {
-            Debug.Log($"I want to play {m_playerSelectedGame} but remote player {remotePlayerRequestStatus} and my status is {m_gameRequestStatus}");
-        }
-
-    }
-
-    [ContextMenu("Debug")]
-    private void TestDebug()
-    {
-        foreach (var player in players)
-        {
-            Debug.LogError($"{player.Data[k_PlayerNameKey].Value} ---> {player.Data[k_SelectedGameKey].Value},Ready = {player.Data[k_IsReadyKey].Value} , Declined = {player.Data[k_IsDeclinedKey].Value}");
-        }
-        
-    }
-
-    public async Task UpdatePlayerData(GameType selectedGame, GameRequestStatus gameRequestStatus)
-    {
-        try
-        {
-            if (activeLobby == null)
-            {
-                Debug.Log("Attempting to toggle ready state when not already in a lobby.");
-                return;
-            }
-
-            m_playerSelectedGame = selectedGame;
-            m_gameRequestStatus = gameRequestStatus;
-
-            var lobbyId = activeLobby.Id;
-
-            var options = new UpdatePlayerOptions();
-            options.Data = CreatePlayerDictionary();
-
-            var updatedLobby = await LobbyService.Instance.UpdatePlayerAsync(lobbyId, playerId, options);
-            if (this == null) return;
-
-            UpdateLobby(updatedLobby);
-        }
-        catch (Exception e)
-        {
-            Debug.LogException(e);
-        }
-    }
-
-    private void DetectPlayerReadyStates(Lobby lobby)
-    {
-        if (lobby.Players.Count <= 1)
-        {
-            return;
-        }
-
-        var localPlayer = players.FirstOrDefault(p => p.Id == playerId);
-        var remotePlayer = players.FirstOrDefault(p => p.Id != playerId);
-
-        var isremotePlayerReady = bool.Parse(remotePlayer.Data[k_IsReadyKey].Value);
-        var remotePlayerSelectedGame = Enum.Parse<GameType>(remotePlayer.Data[k_SelectedGameKey].Value);
-
-        //this means this will be called if started Game Request
-        if (m_IsPlayerReady == true && !isremotePlayerReady && m_playerSelectedGame != GameType.None && remotePlayerSelectedGame == GameType.None)
-        {
-            Debug.Log($"You Want to play {m_playerSelectedGame} my state = {m_IsPlayerReady} Another Player state = {isremotePlayerReady} , Remote Player Selected Game {remotePlayerSelectedGame}");
-            activeLobby = lobby;
-            players = activeLobby?.Players;
-            OnGameRequestInitiated?.Invoke(playerId,m_playerSelectedGame);
-        }
-        //this means this will be called if received Game Request
-        if (!m_IsPlayerReady && isremotePlayerReady && m_playerSelectedGame == GameType.None && remotePlayerSelectedGame != GameType.None)
-        {
-            Debug.Log($"You Want to play {m_playerSelectedGame} my state = {m_IsPlayerReady} Another Player state = {isremotePlayerReady} , Remote Player Selected Game {remotePlayerSelectedGame}");
-
-            activeLobby = lobby;
-            players = activeLobby?.Players;
-            OnGameRequestReceived?.Invoke(remotePlayer, remotePlayerSelectedGame);
-        }
-
-        if(debug)
-            Debug.Log($"You Want to play {m_playerSelectedGame} my state = {m_IsPlayerReady} Another Player state = {isremotePlayerReady} , Remote Player Selected Game {remotePlayerSelectedGame}");
-
-
-    }
-
-    public bool debug;
-
     private bool DoPlayerSelectedGameMatched(List<Player> players)
     {
         var remotePlayer = players.FirstOrDefault(p => p.Id != playerId);
@@ -597,15 +441,7 @@ public class LobbyManager : MonoBehaviour
 
         return false;
     }
-
-   
-
-
-    private string GetPlayerSelectedGame(Player player)
-    {
-        return player.Data[k_SelectedGameKey].Value;
-    }
-
+  
     static bool AreAllPlayerReady(Lobby lobby)
     {
         if (lobby.Players.Count <= 1)
@@ -624,45 +460,7 @@ public class LobbyManager : MonoBehaviour
 
         return true;
     }
-    static void TestDebug(Lobby updatedLobby)
-    {
-        if (updatedLobby.Players.Count <= 1)
-        {
-            return;
-        }
-
-        foreach (var player in updatedLobby.Players)
-        {
-            var isReady = bool.Parse(player.Data[k_IsReadyKey].Value);
-            Debug.Log($"Test Player {player.Id} is Ready = {isReady}");
-            
-        }
-
-    }
-
-    static bool IsPlayerInitiateToPlayGame(Lobby lobby, out Player readyPlayer)
-    {
-        readyPlayer = null;
-
-        if (lobby.Players.Count <= 1)
-            return false;
-
-
-        Debug.Log("Test in method IsPlayerInitiateToPlayGame()");
-        foreach (var player in lobby.Players)
-        {
-            if (player.Data.TryGetValue(k_IsReadyKey, out var dataValue) &&
-                bool.TryParse(dataValue.Value, out bool isReady) &&
-                isReady)
-            {
-                readyPlayer = player;
-                return true;
-            }
-        }
-        return false;
-    }
-
-
+   
     public int GetRemotePlayerAvatarIndex()
     {
         if (activeLobby == null) return 0;
@@ -686,8 +484,6 @@ public class LobbyManager : MonoBehaviour
         for (int i = 0; i < newPlayers.Count; i++)
         {
             if (oldPlayers[i].Id != newPlayers[i].Id )
-                //||
-                //oldPlayers[i].Data[k_IsReadyKey].Value != newPlayers[i].Data[k_IsReadyKey].Value)
             {
                 return true;
             }
@@ -712,14 +508,10 @@ public class LobbyManager : MonoBehaviour
 
     public async Task ToggleReadyStateAndSetSelectedGame(bool isReady, GameType selectedGame,bool isDeclined)
     {
-        Debug.LogError($"ToggleReady state -->Ready {isReady} , game {selectedGame} , isDeclined {isDeclined}");
         try
         {
             if (activeLobby == null)
-            {
-                Debug.Log("Attempting to toggle ready state when not already in a lobby.");
                 return;
-            }
 
             m_IsPlayerReady = isReady;
             m_playerSelectedGame = selectedGame;
@@ -770,8 +562,6 @@ public class LobbyManager : MonoBehaviour
             
             { k_SelectedGameKey,  new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, m_playerSelectedGame.ToString()) },
             
-            { k_gameRequestStatusKey,  new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, m_gameRequestStatus.ToString()) } ,
-            
             { k_IsDeclinedKey,  new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, m_IsDeclined.ToString()) }
             };
 
@@ -788,12 +578,10 @@ public class LobbyManager : MonoBehaviour
         return player[k_PlayerNameKey].Value;
     }
 
-
-
-    private void OnAnyGameStarted()
+    private async void OnAnyGameStarted()
     {
         Debug.LogError("On any game started");
-        ToggleReadyStateAndSetSelectedGame(false, GameType.None,false);
+        await ToggleReadyStateAndSetSelectedGame(false, GameType.None,false);
     }
 
 
@@ -839,12 +627,4 @@ public class LobbyManager : MonoBehaviour
 }
 
 
-public enum GameRequestStatus
-{
-    NotInitiated = 0,
-    Pending = 1,
-    Accepted = 2,
-    Declined = 3,
-
-}
 
