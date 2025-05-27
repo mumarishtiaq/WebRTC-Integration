@@ -17,5 +17,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Multiplayer/GameData/CoinRushScene.unity
     guid: e37fe71ef4a1e564598a62df556cdc6c
+  - enabled: 1
+    path: Assets/Multiplayer/Scenes/RockPaperScissorsScene.unity
+    guid: bd34a514a531ed7459e71448919c45f2
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

@@ -1,68 +1,142 @@
 using Unity.Netcode;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class GameNetworkManager : NetworkBehaviour
 {
     public static GameNetworkManager Instance;
 
-    private NetworkVariable<ChoiceType> player1Choice = new NetworkVariable<ChoiceType>(ChoiceType.None);
-    private NetworkVariable<ChoiceType> player2Choice = new NetworkVariable<ChoiceType>(ChoiceType.None);
+    private Dictionary<ulong, ChoiceType> playerChoices = new();
 
-    private ulong player1Id;
-    private ulong player2Id;
+    private float countdownTime = 5f;
+    private float timer;
+    private bool roundInProgress = false;
 
-
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     public override void OnNetworkSpawn()
     {
         if (IsServer)
         {
-            var clients = NetworkManager.ConnectedClientsList;
-            player1Id = clients[0].ClientId;
-            player2Id = clients.Count > 1 ? clients[1].ClientId : 0;
+            playerChoices.Clear();
+            StartNewRound();
         }
 
-        Instance = this;
+    }
+
+    private void Update()
+    {
+        if (!IsServer || !roundInProgress) return;
+
+        timer -= Time.deltaTime;
+
+        UpdateTimerClientRpc(timer);
+
+        if (timer <= 0f)
+        {
+            CompleteRoundWithRandomChoices();
+        }
+    }
+
+    private void StartNewRound()
+    {
+        playerChoices.Clear();
+        foreach (var client in NetworkManager.ConnectedClientsList)
+        {
+            playerChoices[client.ClientId] = ChoiceType.None;
+        }
+
+        timer = countdownTime;
+        roundInProgress = true;
+        StartCountdownClientRpc(countdownTime);
     }
 
     [ServerRpc(RequireOwnership = false)]
     public void SubmitChoiceServerRpc(ChoiceType choice, ServerRpcParams rpcParams = default)
     {
-        if (rpcParams.Receive.SenderClientId == player1Id)
-            player1Choice.Value = choice;
-        else if (rpcParams.Receive.SenderClientId == player2Id)
-            player2Choice.Value = choice;
+        ulong clientId = rpcParams.Receive.SenderClientId;
 
-        if (player1Choice.Value != ChoiceType.None && player2Choice.Value != ChoiceType.None)
-            CheckWinner();
+        if (playerChoices.ContainsKey(clientId) && playerChoices[clientId] == ChoiceType.None)
+        {
+            playerChoices[clientId] = choice;
+        }
+
+        if (AllChoicesMade())
+        {
+            EvaluateResult();
+        }
     }
 
-    private void CheckWinner()
+    private bool AllChoicesMade()
     {
-        ChoiceType p1 = player1Choice.Value;
-        ChoiceType p2 = player2Choice.Value;
+        foreach (var choice in playerChoices.Values)
+        {
+            if (choice == ChoiceType.None) return false;
+        }
+        return true;
+    }
+
+    private void CompleteRoundWithRandomChoices()
+    {
+        foreach (var clientId in playerChoices.Keys)
+        {
+            if (playerChoices[clientId] == ChoiceType.None)
+            {
+                playerChoices[clientId] = (ChoiceType)Random.Range(0, 3);
+            }
+        }
+
+        EvaluateResult();
+    }
+
+    private void EvaluateResult()
+    {
+        roundInProgress = false;
+
+        var enumerator = playerChoices.GetEnumerator();
+        enumerator.MoveNext();
+        ulong p1Id = enumerator.Current.Key;
+        ChoiceType p1Choice = enumerator.Current.Value;
+
+        enumerator.MoveNext();
+        ulong p2Id = enumerator.Current.Key;
+        ChoiceType p2Choice = enumerator.Current.Value;
 
         string result;
-        if (p1 == p2)
+
+        if (p1Choice == p2Choice)
             result = "Draw!";
-        else if ((p1 == ChoiceType.Rock && p2 == ChoiceType.Scissors) ||
-                 (p1 == ChoiceType.Paper && p2 == ChoiceType.Rock) ||
-                 (p1 == ChoiceType.Scissors && p2 == ChoiceType.Paper))
+        else if ((p1Choice == ChoiceType.Rock && p2Choice == ChoiceType.Scissors) ||
+                 (p1Choice == ChoiceType.Paper && p2Choice == ChoiceType.Rock) ||
+                 (p1Choice == ChoiceType.Scissors && p2Choice == ChoiceType.Paper))
             result = "Player 1 Wins!";
         else
             result = "Player 2 Wins!";
 
-        SendResultClientRpc(result);
+        SendResultClientRpc(result, p1Id, p1Choice, p2Id, p2Choice);
 
-        // Reset for next round
-        player1Choice.Value = ChoiceType.None;
-        player2Choice.Value = ChoiceType.None;
+        Invoke(nameof(StartNewRound), 3f);
     }
 
     [ClientRpc]
-    private void SendResultClientRpc(string result)
+    private void StartCountdownClientRpc(float time)
     {
-        GameUI.Instance.DisplayResult(result);
+        GameUI.Instance.StartCountdown(time);
+    }
+
+    [ClientRpc]
+    private void UpdateTimerClientRpc(float timeLeft)
+    {
+        GameUI.Instance.UpdateCountdown(timeLeft);
+    }
+
+    [ClientRpc]
+    private void SendResultClientRpc(string result, ulong p1Id, ChoiceType p1Choice, ulong p2Id, ChoiceType p2Choice)
+    {
+        GameUI.Instance.DisplayResult(result, p1Id, p1Choice, p2Id, p2Choice);
     }
 }
 
@@ -73,3 +147,4 @@ public enum ChoiceType
     Paper = 1,
     Scissors = 2
 }
+
