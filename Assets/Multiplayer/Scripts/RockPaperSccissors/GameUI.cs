@@ -3,73 +3,100 @@ using UnityEngine.UI;
 using TMPro;
 using Unity.Netcode;
 
-public class GameUI : MonoBehaviour
+namespace Games.RockPaperScissors
 {
-    public static GameUI Instance;
-
-    public Button rockButton, paperButton, scissorsButton;
-    public TMP_Text resultText;
-    public TMP_Text playerChoiceText;
-    public TMP_Text opponentChoiceText;
-    public TMP_Text timerText;
-
-
-    public Button hostBtn, clientBtn;
-
-    private bool hasChosen = false;
-
-    private void Awake()
+    public class GameUI : MonoBehaviour
     {
-        Instance = this;
+        public static GameUI Instance;
 
-        rockButton.onClick.AddListener(() => MakeChoice(ChoiceType.Rock));
-        paperButton.onClick.AddListener(() => MakeChoice(ChoiceType.Paper));
-        scissorsButton.onClick.AddListener(() => MakeChoice(ChoiceType.Scissors));
+        [Header("Gameplay Buttons")]
+        public Button rockButton, paperButton, scissorsButton;
+        public Button rematchButton;
+
+        [Header("Connection Buttons")]
+        public Button hostBtn, clientBtn;
+
+        [Header("UI Texts")]
+        public TMP_Text resultText;
+        public TMP_Text playerChoiceText;
+        public TMP_Text opponentChoiceText;
 
 
-        hostBtn.onClick.AddListener(() => NetworkManager.Singleton.StartHost());
-        clientBtn.onClick.AddListener(() => NetworkManager.Singleton.StartClient());
-    }
+        [Header("Score Texts")]
+        public TMP_Text playerScoreText;
+        public TMP_Text opponentScoreText;
 
-    public void StartCountdown(float time)
-    {
-        hasChosen = false;
-        resultText.text = "";
-        playerChoiceText.text = "";
-        opponentChoiceText.text = "";
-        timerText.text = $"{time:0.0}s";
-    }
 
-    public void UpdateCountdown(float time)
-    {
-        timerText.text = $"{Mathf.Max(0f, time):0.0}s";
-    }
+        private bool hasChosen = false;
 
-    private void MakeChoice(ChoiceType choice)
-    {
-        if (hasChosen) return;
-
-        hasChosen = true;
-        GameNetworkManager.Instance.SubmitChoiceServerRpc(choice);
-        resultText.text = "Waiting for opponent...";
-    }
-
-    public void DisplayResult(string result, ulong p1Id, ChoiceType p1Choice, ulong p2Id, ChoiceType p2Choice)
-    {
-        ulong localId = NetworkManager.Singleton.LocalClientId;
-
-        if (localId == p1Id)
+        private void Awake()
         {
-            playerChoiceText.text = $"You chose: {p1Choice}";
-            opponentChoiceText.text = $"Opponent chose: {p2Choice}";
-        }
-        else
-        {
-            playerChoiceText.text = $"You chose: {p2Choice}";
-            opponentChoiceText.text = $"Opponent chose: {p1Choice}";
+            Instance = this;
+
+            // Game input buttons
+            rockButton.onClick.AddListener(() => MakeChoice(ChoiceType.Rock));
+            paperButton.onClick.AddListener(() => MakeChoice(ChoiceType.Paper));
+            scissorsButton.onClick.AddListener(() => MakeChoice(ChoiceType.Scissors));
+            rematchButton.onClick.AddListener(RequestRematch);
+
+            // Host/Client connection buttons
+            hostBtn.onClick.AddListener(() =>
+            {
+                NetworkManager.Singleton.StartHost();
+                HideConnectionButtons();
+            });
+
+            clientBtn.onClick.AddListener(() =>
+            {
+                NetworkManager.Singleton.StartClient();
+                HideConnectionButtons();
+            });
         }
 
-        resultText.text = result;
-        timerText.text = "";
+        private void MakeChoice(ChoiceType choice)
+        {
+            if (hasChosen) return;
+
+            hasChosen = true;
+            resultText.text = "Waiting for opponent...";
+            GameNetworkManager.Instance.SubmitChoiceServerRpc(choice);
+        }
+
+        private void RequestRematch()
+        {
+            rematchButton.gameObject.SetActive(false);
+            GameNetworkManager.Instance.RequestRematchServerRpc();
+        }
+
+        public void DisplayResult(MatchResultData resultData)
+        {
+            ulong localId = NetworkManager.Singleton.LocalClientId;
+
+
+            playerChoiceText.text = $"{resultData.localPlayer.name} choose: {resultData.localPlayer.choice}";
+            opponentChoiceText.text = $"{resultData.remotePLayer.name} choose: {resultData.remotePLayer.choice}";
+
+            playerScoreText.text = resultData.localPlayer.score.ToString();
+            opponentScoreText.text = resultData.remotePLayer.score.ToString(); 
+
+
+            resultText.text = resultData.result;
+            rematchButton.gameObject.SetActive(true);
+        }
+
+        public void ResetUIForNewRound()
+        {
+            hasChosen = false;
+            resultText.text = "";
+            playerChoiceText.text = "";
+            opponentChoiceText.text = "";
+            rematchButton.gameObject.SetActive(false);
+        }
+
+        private void HideConnectionButtons()
+        {
+            hostBtn.gameObject.SetActive(false);
+            clientBtn.gameObject.SetActive(false);
+        }
     }
 }
