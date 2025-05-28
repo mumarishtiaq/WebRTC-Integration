@@ -53,6 +53,12 @@ namespace Games.RockPaperScissors
             });
         }
 
+        private void Start()
+        {
+            playerScoreText.text = "0";
+            opponentScoreText.text = "0";
+        }
+
         private void MakeChoice(ChoiceType choice)
         {
             if (hasChosen) return;
