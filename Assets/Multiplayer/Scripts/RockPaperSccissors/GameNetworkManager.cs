@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine.Rendering;
 using UnityEngine.SocialPlatforms;
 using System;
+using Games.TicTacToe;
 
 namespace Games.RockPaperScissors
 {
@@ -12,7 +13,10 @@ namespace Games.RockPaperScissors
         public static GameNetworkManager Instance;
 
         private Dictionary<ulong, ChoiceType> playerChoices = new();
-        private Dictionary<ulong, int> playerScores = new();
+
+        public NetworkVariable<int> player1Score = new(writePerm: NetworkVariableWritePermission.Server);
+        public NetworkVariable<int> player2Score = new(writePerm: NetworkVariableWritePermission.Server);
+
 
         private ulong localPlayerId => NetworkManager.Singleton.LocalClientId;
 
@@ -48,23 +52,14 @@ namespace Games.RockPaperScissors
         private void OnGameStarted()
         {
             playerChoices.Clear();
-            playerScores.Clear();
 
-            foreach (var client in NetworkManager.ConnectedClientsList)
-            {
-                playerScores[client.ClientId] = 0;
-            }
+            player1Score.Value = 0;
+            player2Score.Value = 0;
             StartNewRound();
         }
         private void OnClientConnected(ulong obj)
         {
             playerChoices.Clear();
-            playerScores.Clear();
-
-            foreach (var client in NetworkManager.ConnectedClientsList)
-            {
-                playerScores[client.ClientId] = 0;
-            }
             StartNewRound();
         }
 
@@ -89,11 +84,19 @@ namespace Games.RockPaperScissors
                 return;
 
             playerChoices[clientId] = choice;
+            NotifyPlayerMadeChoiceClientRpc(clientId);
 
             if (AllChoicesMade())
             {
                 EvaluateResult();
             }
+        }
+
+        [ClientRpc]
+        private void NotifyPlayerMadeChoiceClientRpc(ulong playerId)
+        {
+            if (playerId != NetworkManager.Singleton.LocalClientId)
+                GameUI.Instance.SetOpponentMadeChoice();
         }
 
         private bool AllChoicesMade()
@@ -140,12 +143,20 @@ namespace Games.RockPaperScissors
                 winnerId = player1Wins ? p1Id : p2Id;
 
 
-                if (playerScores.ContainsKey(winnerId))
-                    playerScores[winnerId]++;
+                if (winnerId == p1Id)
+                    player1Score.Value++;
+                else if (winnerId == p2Id)
+                    player2Score.Value++;
 
             }
 
             SendResultClientRpc(winnerId, p1Id, p1Choice, p2Id, p2Choice);
+        }
+
+        [ContextMenu("TestScores")]
+        void TestScores()
+        {
+            Debug.LogError($"Here are scores P1 : {player1Score.Value} / P2 {player2Score.Value}");
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -172,14 +183,11 @@ namespace Games.RockPaperScissors
             string remoteName = MultiplayerManager.Instance == null ? "Opponent" : MultiplayerManager.Instance.PeerData.RP.Name;
 
 
-            var localScore = playerScores.ContainsKey(localPlayerId) ? playerScores[localPlayerId] : 0;
             var remoteId = isLocalPlayerFirst ? p2Id : p1Id;
-            var remoteScore = playerScores.ContainsKey(remoteId) ? playerScores[remoteId] : 0;
-
             var resultData = new MatchResultData
             {
-                localPlayer = new PlayerInfo("You", localChoice,localScore),
-                remotePLayer = new PlayerInfo(remoteName, remoteChoice,remoteScore),
+                localPlayer = new PlayerInfo("You", localChoice),
+                remotePLayer = new PlayerInfo(remoteName, remoteChoice),
                 result = winnerId > 1
                     ? "Draw!"
                     : (winnerId == localPlayerId ? "You Win!" : "You Lose!")
@@ -196,6 +204,19 @@ namespace Games.RockPaperScissors
         public ulong GetLocalPlayerID()
         {
             return localPlayerId;
+        }  
+        public ulong GetHostPlayerId()
+        {
+            if(IsHost)
+                return NetworkManager.Singleton.ConnectedClients[0].ClientId;
+
+            return 0;
+        }
+
+        public void GetScores(out int player1Score, out int player2Score)
+        {
+            player1Score = this.player1Score.Value;
+            player2Score = this.player2Score.Value;
         }
     }
 
@@ -211,13 +232,11 @@ namespace Games.RockPaperScissors
     {
         public string name;
         public ChoiceType choice;
-        public int score;
 
-        public PlayerInfo(string name, ChoiceType choice, int score = 0)
+        public PlayerInfo(string name, ChoiceType choice)
         {
             this.name = name;
             this.choice = choice;
-            this.score = score;
         }
     }
 
