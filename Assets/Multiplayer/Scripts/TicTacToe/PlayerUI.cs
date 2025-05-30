@@ -43,6 +43,8 @@ namespace Games.TicTacToe
 
             playerCrossScoreTextMesh.text = playerCrossScore.ToString();
             playerCircleScoreTextMesh.text = playerCircleScore.ToString();
+
+
         }
 
         private void GameManager_OnCurrentPlayablePlayerTypeChanged(object sender, System.EventArgs e)

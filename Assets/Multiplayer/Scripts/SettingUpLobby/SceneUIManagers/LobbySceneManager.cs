@@ -187,8 +187,8 @@ public class LobbySceneManager : MonoBehaviour
             case GameType.Coin_Rush:
                 sceneType = SceneType.CoinRush;
                 break;
-            case GameType.Chess:
-                sceneType = SceneType.ThirdGame;
+            case GameType.Rock_Paper_Scissors:
+                sceneType = SceneType.RockPaperScissors;
                 break;
             default:
                 break;

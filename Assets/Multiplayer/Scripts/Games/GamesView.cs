@@ -82,6 +82,6 @@ public enum GameType
     None = -1,
     Tic_Tac_Toe = 0,
     Coin_Rush = 1,
-    Chess = 2
+    Rock_Paper_Scissors = 2
 }
 

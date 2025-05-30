@@ -1803,20 +1803,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e77fa616146c23847a026f82b3d22ce1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_gameRequestStatus: 0
   OnGameStarted:
     m_PersistentCalls:
       m_Calls: []
-  OnGameRequestReceivedNew:
-    m_PersistentCalls:
-      m_Calls: []
-  OnGameRequestAcceptedByBoth:
-    m_PersistentCalls:
-      m_Calls: []
-  OnGameRequestDeclined:
-    m_PersistentCalls:
-      m_Calls: []
-  debug: 0
 --- !u!114 &975523785
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2686,7 +2675,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 39.6
+  m_fontSize: 39.7
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1

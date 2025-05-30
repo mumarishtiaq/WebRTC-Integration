@@ -3,10 +3,11 @@ using UnityEngine.UI;
 using TMPro;
 using Unity.Netcode;
 using DG.Tweening;
+using System.Collections;
 
 namespace Games.RockPaperScissors
 {
-    public class GameUI : MonoBehaviour
+    public class GameUI : SceneViewBase
     {
         public static GameUI Instance;
 
@@ -23,8 +24,6 @@ namespace Games.RockPaperScissors
         [Header("UI Texts")]
         public TMP_Text resultText;
         public TMP_Text _waitingforOtherPlayerTxt;
-        public TMP_Text playerChoiceText;
-        public TMP_Text opponentChoiceText;
 
 
         [Header("Score Texts")]
@@ -36,6 +35,15 @@ namespace Games.RockPaperScissors
         [Header("Choices Parent")]
         public GameObject _localPlayerCheckMark;
         public GameObject _remotePlayerCheckMark;
+
+        [Header("Choice Handler")]
+        [SerializeField] private PlayerChoicesHandler _choiceHandler;
+
+
+
+        [Header("Opponent Left Popup")]
+        [SerializeField] private TextMeshProUGUI _opponentLeftTxt;
+        [SerializeField] private Transform _opponentLeftPopup;
 
 
         private bool hasChosen = false;
@@ -96,10 +104,9 @@ namespace Games.RockPaperScissors
             if(!_localPlayerCheckMark.activeInHierarchy || !_remotePlayerCheckMark.activeInHierarchy)
                 _waitingforOtherPlayerTxt.transform.Scale(Vector3.one, 1f, Ease.OutBack);
 
-
+            _choiceHandler.SetPlayerChoice(choice, isLocal:true); 
             GameNetworkManager.Instance.SubmitChoiceServerRpc(choice);
         }
-
         public void SetOpponentMadeChoice()
         {
             _remotePlayerCheckMark.SetActive(true);
@@ -111,24 +118,31 @@ namespace Games.RockPaperScissors
             GameNetworkManager.Instance.RequestRematchServerRpc();
         }
 
-        public void DisplayResult(MatchResultData resultData)
+        public IEnumerator DisplayResult(MatchResultData resultData)
         {
-            ulong localId = NetworkManager.Singleton.LocalClientId;
+            SetInteractable(false);
+
+            yield return new WaitForSeconds(1);
 
 
-            playerChoiceText.text = $"{resultData.localPlayer.name} choose: {resultData.localPlayer.choice}";
-            opponentChoiceText.text = $"{resultData.remotePLayer.name} choose: {resultData.remotePLayer.choice}";
 
-
-            resultText.text = resultData.result;
-            resultText.transform.Scale(Vector3.one, 0.6f, Ease.OutBack);
-
-            if(_waitingforOtherPlayerTxt.transform.localScale != Vector3.zero)
+            if (_waitingforOtherPlayerTxt.transform.localScale != Vector3.zero)
                 _waitingforOtherPlayerTxt.transform.Scale(Vector3.zero, 0.2f, Ease.InBack);
 
 
-            rematchButton.gameObject.SetActive(true);
+            _choiceHandler.SetPlayerChoice(resultData.remotePLayer.choice, isLocal: false,
+                () => {
+
+                    resultText.text = resultData.result;
+                    resultText.transform.Scale(Vector3.one, 0.6f, Ease.OutBack);
+                    rematchButton.gameObject.SetActive(true);
+
+                    SetInteractable(true);
+                });
         }
+
+
+
 
         private void SetScoreOnCombine(string local , string remote)
         {
@@ -139,17 +153,17 @@ namespace Games.RockPaperScissors
         {
             hasChosen = false;
             resultText.text = "";
-            playerChoiceText.text = "";
-            opponentChoiceText.text = "";
             rematchButton.gameObject.SetActive(false);
 
-            _choicesParent.Scale(Vector3.one);
+            _choicesParent.Scale(Vector3.one,0.3f,Ease.OutBack);
             resultText.transform.Scale(Vector3.zero);
             _waitingforOtherPlayerTxt.transform.Scale(Vector3.zero);
 
 
             _localPlayerCheckMark.SetActive(false);
             _remotePlayerCheckMark.SetActive(false);
+
+            _choiceHandler.ResetToDefault();
         }
 
         private void UpdateScores()
@@ -171,6 +185,14 @@ namespace Games.RockPaperScissors
         {
             hostBtn.gameObject.SetActive(false);
             clientBtn.gameObject.SetActive(false);
+        }
+
+        public void OnLeft(string opponentName)
+        {
+            _opponentLeftTxt.text = opponentName + " has left the game";
+            _opponentLeftPopup.DOScale(1, 0.5f);
+            SetInteractable(false);
+
         }
     }
 }

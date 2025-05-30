@@ -50,6 +50,9 @@ public static class SceneManagerCustom
                 break;
             case SceneType.TicTacToe:
                 sceneName = "TicTacToeScene";
+                break; 
+            case SceneType.RockPaperScissors:
+                sceneName = "RockPaperScissorsScene";
                 break;
             case SceneType.TicTacToeTest:
                 sceneName = "TicTacToeTestScene";
@@ -72,7 +75,7 @@ public enum SceneType
     Lobby = 1,
     CoinRush = 2,
     TicTacToe = 3,
-    ThirdGame = 4,
+    RockPaperScissors = 4,
     TicTacToeTest = 5,
 
 }

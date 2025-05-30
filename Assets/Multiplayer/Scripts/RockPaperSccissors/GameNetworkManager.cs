@@ -1,10 +1,7 @@
 using Unity.Netcode;
 using UnityEngine;
 using System.Collections.Generic;
-using UnityEngine.Rendering;
-using UnityEngine.SocialPlatforms;
-using System;
-using Games.TicTacToe;
+using System.Collections;
 
 namespace Games.RockPaperScissors
 {
@@ -22,10 +19,11 @@ namespace Games.RockPaperScissors
 
         private bool roundInProgress = false;
 
+        private PeerData _peerData =>MultiplayerManager.Instance.PeerData;
+
         private void Awake()
         {
             Instance = this;
-
         }
 
         private void Start()
@@ -35,6 +33,8 @@ namespace Games.RockPaperScissors
             {
                 OnGameStarted();
             }
+            LobbyManager.Instance.OnGameStarted?.Invoke();
+            GameUI.Instance.SetPlayerData(_peerData == null ? "Opponent" : _peerData.RP.Name);
         }
 
 
@@ -153,11 +153,7 @@ namespace Games.RockPaperScissors
             SendResultClientRpc(winnerId, p1Id, p1Choice, p2Id, p2Choice);
         }
 
-        [ContextMenu("TestScores")]
-        void TestScores()
-        {
-            Debug.LogError($"Here are scores P1 : {player1Score.Value} / P2 {player2Score.Value}");
-        }
+      
 
         [ServerRpc(RequireOwnership = false)]
         public void RequestRematchServerRpc(ServerRpcParams rpcParams = default)
@@ -169,7 +165,7 @@ namespace Games.RockPaperScissors
         [ClientRpc]
         private void SendResultClientRpc(ulong winnerId, ulong p1Id, ChoiceType p1Choice, ulong p2Id, ChoiceType p2Choice)
         {
-            GameUI.Instance.DisplayResult(GetMatchResultData(winnerId, p1Id, p1Choice, p2Id, p2Choice));
+            StartCoroutine(GameUI.Instance.DisplayResult(GetMatchResultData(winnerId, p1Id, p1Choice, p2Id, p2Choice)));
         }
 
         private MatchResultData GetMatchResultData(ulong winnerId, ulong p1Id, ChoiceType p1Choice, ulong p2Id, ChoiceType p2Choice)
@@ -218,6 +214,81 @@ namespace Games.RockPaperScissors
             player1Score = this.player1Score.Value;
             player2Score = this.player2Score.Value;
         }
+
+
+        [ContextMenu("LeaveGame")]
+        public void LeaveGame()
+        {
+            if (IsHost)
+            {
+                player1Score.Dispose();
+                player2Score.Dispose();
+                HostLeaveGame();
+            }
+            else if (IsClient)
+            {
+                ClientLeaveGameServerRpc();
+                ShutdownAndReturnToLobby(); // Only for the client side
+            }
+        }
+
+        // ----- Host Leave -----
+        private void HostLeaveGame()
+        {
+            Debug.Log("Host is leaving the game (server remains active).");
+            NotifyClientHostLeftClientRpc();
+            LoadLobbySceneLocally();
+        }
+
+        [ClientRpc]
+        private void NotifyClientHostLeftClientRpc()
+        {
+            if (!IsHost)
+            {
+                Debug.LogWarning($"Host has left the game. ");
+                StartCoroutine(ShowOpponentLeftPopup());
+
+            }
+        }
+
+        // ----- Client Leave -----
+        [ServerRpc(RequireOwnership = false)]
+        private void ClientLeaveGameServerRpc(ServerRpcParams rpcParams = default)
+        {
+            ulong clientId = rpcParams.Receive.SenderClientId;
+            Debug.Log($"Client {clientId} has left the game.");
+
+            StartCoroutine(ShowOpponentLeftPopup());
+        }
+
+        private void ShutdownAndReturnToLobby()
+        {
+            if (NetworkServiceManager.Instance != null)
+                NetworkServiceManager.Instance.Uninitialize();
+
+            else
+                NetworkManager.Singleton.Shutdown();
+
+
+            LoadLobbySceneLocally();
+        }
+
+        // ----- Shared -----
+        private void LoadLobbySceneLocally()
+        {
+
+            SceneManagerCustom.LoadScene(SceneType.Lobby);
+
+        }
+
+        private IEnumerator ShowOpponentLeftPopup()
+        {
+            GameUI.Instance.OnLeft(_peerData == null ? "Opponent" : _peerData.RP.Name);
+            yield return new WaitForSeconds(3);
+
+            LoadLobbySceneLocally();
+        }
+
     }
 
     public enum ChoiceType
